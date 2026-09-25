@@ -47,7 +47,9 @@ const SegmentedControl = React.forwardRef<
     ref={ref}
     role="group"
     className={cn(
-      "inline-flex overflow-hidden rounded-action border border-outline-variant",
+      // Radius follows the app-wide Style (rounded / pill); the lowest surface
+      // (white in light mode) keeps it legible on a tinted page.
+      "inline-flex overflow-hidden rounded-[var(--ui-radius-control)] border border-outline-variant bg-surface-container-lowest",
       className,
     )}
     {...props}

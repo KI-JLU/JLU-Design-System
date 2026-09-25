@@ -47,6 +47,12 @@ export interface FilterChipsOption {
   label: string;
   /** Optional leading icon — a star on „Favoriten", say. */
   icon?: React.ReactNode;
+  /**
+   * Colour-codes the chip: a leading dot, and the active state is tinted in it
+   * instead of `primary`. Any CSS colour; `categoryColor(id)` gives a stable
+   * one from the category palette. The label stays `on-surface` for contrast.
+   */
+  color?: string;
 }
 
 export interface FilterChipsProps
@@ -94,9 +100,28 @@ const FilterChips = React.forwardRef<HTMLDivElement, FilterChipsProps>(
             // and the class only paints it.
             aria-pressed={active}
             onClick={() => onValueChange(option.value)}
-            className={filterChipVariants({ kind: "filter", active })}
+            className={cn(
+              filterChipVariants({ kind: "filter", active }),
+              option.color && active && "text-on-surface",
+            )}
+            style={
+              option.color && active
+                ? {
+                    borderColor: option.color,
+                    backgroundColor: `color-mix(in srgb, ${option.color} 18%, var(--color-surface-container-lowest))`,
+                  }
+                : undefined
+            }
           >
             {option.icon}
+            {option.color && (
+              <span
+                data-slot="filter-chip-dot"
+                aria-hidden="true"
+                className="size-2 shrink-0 rounded-full"
+                style={{ backgroundColor: option.color }}
+              />
+            )}
             {option.label}
           </button>
         );

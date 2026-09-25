@@ -39,10 +39,12 @@ export const filterChipVariants = cva(
         // Square, so `rounded-full` is a circle. h-8 = 32px, w-8 matches it.
         action: "w-8",
       },
+      // Both states sit on the lowest surface (white in light mode), so a chip
+      // keeps its contrast on a tinted page; the active tint is mixed over it.
       active: {
-        true: "border-primary bg-primary/10 text-primary",
+        true: "border-primary bg-[color-mix(in_srgb,var(--color-primary)_10%,var(--color-surface-container-lowest))] text-primary",
         false:
-          "border-outline-variant text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface",
+          "border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface",
       },
     },
     defaultVariants: { kind: "filter", active: false },

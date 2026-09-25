@@ -126,3 +126,26 @@ describe("FilterChips", () => {
     expect(screen.getByRole("button", { name: "Favoriten" })).toBeInTheDocument();
   });
 });
+
+describe("FilterChips colour-coding", () => {
+  it("draws a dot in the option's colour and tints only the active chip", () => {
+    const { container } = render(
+      <FilterChips
+        aria-label="Themen filtern"
+        value="a"
+        onValueChange={() => {}}
+        options={[
+          { value: "a", label: "Lehre", color: "rgb(238, 69, 137)" },
+          { value: "b", label: "Forschung", color: "rgb(21, 185, 156)" },
+          { value: "c", label: "Alle" },
+        ]}
+      />,
+    );
+    const dots = container.querySelectorAll<HTMLElement>('[data-slot="filter-chip-dot"]');
+    expect(dots).toHaveLength(2);
+    expect(dots[0].style.backgroundColor).toBe("rgb(238, 69, 137)");
+    const [lehre, forschung] = screen.getAllByRole("button");
+    expect(lehre.style.borderColor).toBe("rgb(238, 69, 137)");
+    expect(forschung.style.borderColor).toBe("");
+  });
+});
