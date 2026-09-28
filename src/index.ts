@@ -188,6 +188,7 @@ export { ActionMenu, type ActionMenuItem, type ActionMenuProps } from "./compone
 /** File drop target, and the window-wide "files are being dragged" signal that reveals it. */
 export { FileDropzone, type FileDropzoneProps } from "./components/file-dropzone";
 export { useWindowFileDrag } from "./lib/use-window-file-drag";
+export { categoryColor, CATEGORY_COLOR_COUNT } from "./lib/category-color";
 export { SidebarRail, SidebarRailItem, type SidebarRailItemProps } from "./components/sidebar-rail";
 export { SidebarScrollArea, type SidebarScrollAreaProps } from "./components/sidebar-scroll-area";
 /** One frame for both side columns: fixed head + the list that scrolls. */

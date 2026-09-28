@@ -540,6 +540,24 @@ body {
 }
 
 /* ==========================================================================
+ * Category palette — colour-coding for user-made categories (filter chips,
+ * tags). Nine hues, the same in light and dark: they are swatches and tints
+ * next to on-surface text, never a text colour. `categoryColor(key)` picks one
+ * stably by key.
+ * ========================================================================== */
+:root {
+  --color-category-1: #ee4589;
+  --color-category-2: #15b99c;
+  --color-category-3: #92d32b;
+  --color-category-4: #f48b16;
+  --color-category-5: #facf37;
+  --color-category-6: #3897e8;
+  --color-category-7: #30b9f6;
+  --color-category-8: #b46ef7;
+  --color-category-9: #31c4cb;
+}
+
+/* ==========================================================================
  * Accent colour (AppearanceProvider → <html data-accent>). `standard` is the
  * JLU blue defined above; each other accent replaces the whole primary family,
  * light and dark, so everything drawn in `primary` follows it. Light values
