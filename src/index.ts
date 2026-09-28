@@ -319,6 +319,27 @@ export {
   CommandShortcut,
   CommandSeparator,
 } from "./components/command";
+/**
+ * A text field with a filterable, grouped listbox anchored under it (WAI-ARIA
+ * APG combobox, list autocomplete) — cmdk for the list and keyboard model,
+ * Radix Popover for anchoring and dismissal. Client- or server-filtered.
+ */
+export {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxGroup,
+  ComboboxItem,
+  ComboboxEmpty,
+  ComboboxLoading,
+  ComboboxSeparator,
+  type ComboboxProps,
+  type ComboboxInputProps,
+  type ComboboxContentProps,
+  type ComboboxListProps,
+  type ComboboxLoadingProps,
+} from "./components/combobox";
 export { HoverCard, HoverCardTrigger, HoverCardContent } from "./components/hover-card";
 export { PdfThumbnail, type PdfThumbnailProps } from "./components/pdf-thumbnail";
 export { preloadPdfjs, renderPdfFirstPage, type RenderPdfFirstPageOptions } from "./lib/pdf-render";

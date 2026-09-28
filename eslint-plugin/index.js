@@ -120,6 +120,10 @@ const DS_CONTROLS = [
   "Textarea",
   "Badge",
   "MenuItem",
+  // Combobox's field and rows are the Input / MenuItem look under a new
+  // name — the same layout-only contract applies to them.
+  "ComboboxInput",
+  "ComboboxItem",
   "NavItem",
   "Switch",
   "SegmentedControl",
