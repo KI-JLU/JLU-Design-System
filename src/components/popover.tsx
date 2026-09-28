@@ -7,7 +7,8 @@ import { cn } from "../lib/utils";
  * that are NOT action menus (filter panels, pickers, small forms). Escape
  * closes, focus moves into the panel and returns to the trigger, outside
  * clicks dismiss. For a list of actions use DropdownMenu instead; for a
- * filterable listbox compose Popover + Input + MenuItem.
+ * filterable listbox under a text field use `Combobox` (built on this
+ * Popover plus cmdk).
  */
 const Popover = PopoverPrimitive.Root;
 const PopoverTrigger = PopoverPrimitive.Trigger;

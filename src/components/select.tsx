@@ -10,8 +10,8 @@ import { menuItemVariants } from "./menu-item-variants";
  * dropdown internals (custom listboxes without Escape/arrow keys/typeahead).
  * The trigger speaks the form-field vocabulary (fieldVariants, incl.
  * `aria-invalid` error look via FormControl), items speak the MenuItem
- * vocabulary. For a *filterable* list (combobox) compose
- * Popover + Input + MenuItem instead.
+ * vocabulary. For a *filterable* list (a text field with suggestions) use
+ * `Combobox` instead.
  */
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
