@@ -41,11 +41,17 @@ import { useIsDesktop } from "../lib/pane-layout";
  *
  * **The bar has three regions** (0.30.0): `pageLabel` on the left, `search`
  * clamped to the **bar's** centre, `headerActions` on the right. The two side
- * regions are equal-width flex children (`flex-1 basis-0`), which is what
- * makes the centre region centred on the row rather than in the space the
- * label leaves — the difference to 0.29.0's `mx-auto` recipe, which centred
- * the content of `headerActions` only when there was no label at all. The
- * row's height is `AppShell`'s: 64px in every state.
+ * regions are identical flex children (`flex-1`, basis 0, one shared floor),
+ * which is what makes the centre region centred on the row rather than in the
+ * space the label leaves — the difference to 0.29.0's `mx-auto` recipe, which
+ * centred the content of `headerActions` only when there was no label at all.
+ * The row's height is `AppShell`'s: 64px in every state.
+ *
+ * **On a short bar the search gives way first** (0.44.1, KI-842): it shrinks
+ * from 28rem to an 8rem floor while each side keeps an 11rem floor, and only
+ * then do the sides narrow — equally, so the search stays centred. Until
+ * 0.44.0 it was the other way round, and a 560px bar left the label 16px
+ * (measured in JustRAG; the render body's `wideBar` note has the numbers).
  *
  * **The bar takes the column gutter since 0.37.0** — `px-gutter` (24px)
  * instead of the `Container` page measure it used until 0.36.0 (24px below
@@ -94,8 +100,10 @@ export interface AppShellLayoutProps
    */
   pageLabel?: React.ReactNode;
   /**
-   * The bar's **centre** region (0.30.0) — a search field, clamped to
-   * `max-w-md` and centred on the bar itself, with or without a `pageLabel`.
+   * The bar's **centre** region (0.30.0) — a search field, 28rem wide at most
+   * and centred on the bar itself, with or without a `pageLabel`. On a short
+   * bar it shrinks, down to 8rem, before the label and the actions lose their
+   * 11rem each (0.44.1); see the `wideBar` note in the render body.
    *
    * It exists because "centred" could not be expressed from the outside: the
    * 0.29.0 recipe (`w-full max-w-md mx-auto` inside `headerActions`) centres
@@ -256,9 +264,11 @@ const AppShellLayout = React.forwardRef<HTMLDivElement, AppShellLayoutProps>(
 
     /* The wide bar: three regions.
 
-       The two side regions are `flex-1 basis-0` and are rendered whether or
-       not they have content — that is the mechanism, not an oversight. Equal
-       flex on both sides gives the centre region the row's exact middle,
+       The two side regions are identical flex items (`flex-1`, i.e. basis 0,
+       and the same `min-w-*` floor) and are rendered whether or not they have
+       content — that is the mechanism, not an oversight. Two items with the
+       same flex values get the same width in every state of the flex
+       algorithm, so the centre region sits on the row's exact middle,
        independent of how wide the label or the actions are; an omitted region
        would hand its space to the other side and move the centre by half of
        it. (0.29.0 had the opposite rule for the opposite reason: with a single
@@ -267,9 +277,43 @@ const AppShellLayout = React.forwardRef<HTMLDivElement, AppShellLayoutProps>(
        one about elements with content, this one about the regions that hold
        them; an empty region carries no text and no box of its own.)
 
-       `max-w-md` caps the centre at 28rem, so it stays a search field rather
-       than a full-width bar, and `min-w-0` lets it shrink before the row
-       overflows.
+       **What gives way first when the row is short (0.44.1, KI-842).** Until
+       0.44.0 the centre was `w-full max-w-md min-w-0` and the sides had no
+       floor, so the centre kept its full 28rem and the two sides absorbed the
+       whole shortfall. Measured in Chromium (JustRAG KI-838, both columns open
+       at 320px, a 560px bar; reproduced by `NarrowBarKeepsTheLabel`): the
+       label's region was 16px, a back button plus topic title in it got 0px
+       of title, and the back button and the gear each reached 4px into the
+       field, which stayed at 448px. Now the order is:
+
+       1. **Spare room** — the sides are `flex-1` and the centre does not grow,
+          so a long row splits what the capped search leaves equally between
+          the sides (the pre-0.44.1 layout, unchanged).
+       2. **Then the search.** The centre is `w-md` (a 28rem flex basis) and
+          shrinks, down to its floor `--bar-search-min` (8rem), while the sides
+          hold their floor `--bar-side-min` (11rem: a 36px icon button plus a
+          ~120px truncated title). Flex does this without a priority knob: a
+          side's basis is 0, below its floor, so in the shrink pass it is
+          frozen at the floor and the centre alone takes the shortfall. The
+          560px case lands exactly on this step's end: 512 content − 32 gaps =
+          2 × 176 + 128.
+       3. **Only then the sides**, equally: the side floor is
+          `min(side-min, (100% − search-min − 2 × gap-4) / 2)`, so once the
+          search sits at its floor the floor itself shrinks with the row and
+          the two sides give way half each. The label truncates further; the
+          search stays usable and centred.
+       4. Below a row of search-min + 2 × gap (a 208px bar), the sides are 0
+          and the search overflows — not reachable with two open columns on an
+          `lg` window. `BarGivesWayInOrder` measures steps 1–3.
+
+       So the search is on the row's exact centre at every width down to that
+       last step. Known limit: the floor is a length, not the content's own
+       minimum — `headerActions` wider than 11rem (a single `ThemeToggle` is
+       102px) is not reserved for and reaches toward the search on a short
+       row. A content-derived floor cannot be expressed here: the label's
+       min-content is its full untruncated text, so it would switch
+       `truncate` off, and two different content floors would break the
+       symmetry the centring rests on.
 
        **The row's inset is `px-gutter` (24px), not a page measure** (0.37.0).
        Until 0.36.0 both bars were a `Container` — `mx-auto w-full px-gutter
@@ -290,10 +334,12 @@ const AppShellLayout = React.forwardRef<HTMLDivElement, AppShellLayoutProps>(
        chrome, not a pane's body — so the two insets are deliberately
        different and neither follows the other. */
     const wideBar = (
-      <div className="flex w-full items-center gap-4 px-gutter">
-        <div className="flex min-w-0 flex-1 items-center">{label}</div>
-        {search ? <div className="w-full max-w-md min-w-0">{search}</div> : null}
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
+      <div className="flex w-full items-center gap-4 px-gutter [--bar-search-min:8rem] [--bar-side-min:11rem]">
+        <div className="flex min-w-[min(var(--bar-side-min),(100%_-_var(--bar-search-min)_-_2rem)/2)] flex-1 items-center">
+          {label}
+        </div>
+        {search ? <div className="w-md min-w-(--bar-search-min)">{search}</div> : null}
+        <div className="flex min-w-[min(var(--bar-side-min),(100%_-_var(--bar-search-min)_-_2rem)/2)] flex-1 items-center justify-end gap-2">
           {headerActions}
         </div>
       </div>

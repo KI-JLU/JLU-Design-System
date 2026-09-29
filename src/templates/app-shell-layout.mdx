@@ -57,9 +57,10 @@ Aufrufstellen heißt, steht unter „Migration 0.29 → 0.30".
 <Canvas of={AppShellLayoutStories.WithCenteredSearch} />
 
 - **Links** das `pageLabel`, **in der Mitte** `search`, **rechts**
-  `headerActions`. Die beiden Randregionen sind gleich breite Flex-Kinder
-  (`flex-1 basis-0`) — genau das zentriert die Mitte auf der **Zeile** und
-  nicht auf der Fläche, die das Label übrig lässt.
+  `headerActions`. Die beiden Randregionen sind gleiche Flex-Kinder
+  (`flex-1`, Basis 0, seit 0.44.1 mit derselben Untergrenze) — genau das
+  zentriert die Mitte auf der **Zeile** und nicht auf der Fläche, die das
+  Label übrig lässt.
 - **Gemessen für 0.30.0 in Chromium** (1280px-Fenster, `play`-Funktion der
   Story) — die Zahlen belegen jenes Release: Zeile 256–1200 → Mitte 728, Feld
   504–952 → Mitte 728, obwohl Label (125,4px) und Umschalter (102px) links und
@@ -79,6 +80,42 @@ Aufrufstellen heißt, steht unter „Migration 0.29 → 0.30".
   `top: 76px` (= 64 + 12) unter diese Kante. Eine Zeile, die beim Weglassen der
   letzten Prop zusammenfiele, wäre für eine unveränderte Aufrufstelle eine
   **brechende Geometrie-Änderung**.
+
+### Short bar: the search gives way first (since 0.44.1)
+
+<Canvas of={AppShellLayoutStories.NarrowBarKeepsTheLabel} />
+
+- **Until 0.44.0 the side regions gave way first.** The centre was `w-full
+  max-w-md min-w-0` and the sides had no floor, so the search kept its full
+  28rem and the label and the actions absorbed the whole shortfall. Measured
+  in Chromium (JustRAG KI-838, both columns open at 320px, a 560px bar): the
+  label's region was **16px**, a back button plus a topic title got **0px** of
+  title, and the back button and the gear each reached 4px into the 448px
+  field.
+- **Since 0.44.1 the order is: spare room, then the search, then the sides.**
+  The centre is a 28rem flex basis that shrinks down to an **8rem** floor;
+  each side region keeps an **11rem** floor (a 36px icon button plus a ~120px
+  truncated title) until the search has reached its own. Only then do the
+  side floors shrink with the row, both equally. In the 560px case the title
+  keeps 132px and the field is 128px.
+- **The search stays on the bar's exact centre** at every width down to a
+  208px bar (search floor + gaps + inset), because the two side regions stay
+  identical flex items in every step. Narrower than that the sides are 0 and
+  the search overflows — not reachable with two open columns on an `lg`
+  window.
+- **Known limit:** the floor is a length, not the content's own minimum.
+  `headerActions` wider than 11rem (one `ThemeToggle` is 102px) is not
+  reserved for and reaches toward the search on a short bar. A
+  content-derived floor would switch `truncate` off for the label (its
+  min-content is the full text) and break the symmetry the centring rests on.
+- The wide bar is unchanged — the search at its 28rem cap, centred:
+
+<Canvas of={AppShellLayoutStories.WideBarKeepsTheSearchAtItsMaximum} />
+
+- `BarGivesWayInOrder` narrows one shell from a 1024px to a 300px bar and
+  asserts the order relationally: 1024 → 900 the field holds its cap, 800 →
+  560 the field loses all 240px and the title none, 560 → 480 the field holds
+  its floor and the title loses 40px (half of 80).
 
 ### Die Einrückung der Zeile (seit 0.37.0)
 
