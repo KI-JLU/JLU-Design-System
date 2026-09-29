@@ -498,6 +498,19 @@ consumer. Not done yet because it needs an account action nobody has taken:
 Until then the git path carries us; keep the README's git section first.
 
 ### Changelog
+- **0.44.1** — **Fix: on a short `AppShellLayout` bar the search gives way
+  before the label** (KI-842). Until 0.44.0 the centre `search` region kept
+  its full 28rem and the two side regions absorbed the whole shortfall;
+  measured in JustRAG (KI-838, both columns open at 320px, a 560px bar) the
+  `pageLabel` region was 16px, a back button plus topic title got 0px of
+  title, and the back button and the gear reached 4px into the field. Now the
+  search is a 28rem flex basis that shrinks to an 8rem floor while each side
+  keeps an 11rem floor; only then do both sides narrow, equally. The search
+  stays on the bar's exact centre throughout (down to a 208px bar), the bar
+  stays 64px, and in the 560px case the title keeps 132px. Stories
+  `NarrowBarKeepsTheLabel`, `WideBarKeepsTheSearchAtItsMaximum` and
+  `BarGivesWayInOrder` measure it in Chromium. Known limit: `headerActions`
+  wider than 11rem are not reserved for on a short bar. No API change.
 - **0.44.0** — **`Combobox`**: a text field with a filterable, grouped listbox
   anchored under it (WAI-ARIA combobox, list autocomplete), built on cmdk +
   Radix Popover; client or server filtering, focus never leaves the field.

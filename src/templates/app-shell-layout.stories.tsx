@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { composeStories } from "@storybook/react-vite";
-import { expect, waitFor } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 import {
+  ArrowLeft,
   FileText,
   Home,
   LayoutDashboard,
@@ -12,6 +13,8 @@ import {
   Users,
 } from "lucide-react";
 import { AppShellLayout, type AppShellLayoutProps } from "./app-shell-layout";
+import type { AppShellPanel } from "../components/app-shell";
+import { Button } from "../components/button";
 import { Card } from "../components/card";
 import { DropdownMenuItem } from "../components/dropdown-menu";
 import { Input } from "../components/input";
@@ -269,6 +272,253 @@ export const WithCenteredSearchOnly: Story = {
     await expect(field.right).toBeLessThan(row.right);
     // Kein Label-Element, nicht nur kein Text: die Zeile enthält keinen Absatz.
     await expect(bar(canvasElement).querySelector("p")).toBeNull();
+  },
+};
+
+/* ------------------------------------------------------------------------ */
+/* 0.44.1 (KI-842): the search gives way before the side regions            */
+/* ------------------------------------------------------------------------ */
+
+/** A topic title long enough to need truncation in every bar measured below. */
+const TOPIC_TITLE = "Prüfungsordnung Informatik (Master of Science), Fassung 2026";
+
+/**
+ * The composition JustRAG's workspace hangs into the bar (JustRAG KI-838): a
+ * 36px back button plus a truncating topic title in `pageLabel`, a search
+ * field in `search`, one gear in `headerActions`.
+ */
+const workspaceBar = {
+  pageLabel: (
+    <span className="flex min-w-0 items-center gap-2">
+      <Button variant="ghost" size="icon" aria-label="Back">
+        <ArrowLeft className="size-5" aria-hidden />
+      </Button>
+      <span className="min-w-0 truncate">{TOPIC_TITLE}</span>
+    </span>
+  ),
+  search: (
+    <Input type="search" aria-label="Search" placeholder="Search…" leadingIcon={<Search />} />
+  ),
+  headerActions: (
+    <Button variant="ghost" size="icon" aria-label="Settings">
+      <Settings className="size-5" aria-hidden />
+    </Button>
+  ),
+} satisfies Partial<AppShellLayoutProps>;
+
+/** The right column of the measured consumer screen, at a given width. */
+const sourcesPanel = (width: number): AppShellPanel => ({
+  content: (
+    <div className="flex flex-col gap-stack-md p-gutter">
+      <Card className="p-4">Quelle 1</Card>
+    </div>
+  ),
+  header: <span className="truncate font-title-md">Quellen</span>,
+  label: "Quellen",
+  isOpen: true,
+  onOpenChange: () => {},
+  width,
+  expandLabel: "Quellen ausklappen",
+  collapseLabel: "Quellen einklappen",
+});
+
+/** Both side columns at the measured 320px. */
+const COLUMN_WIDTH = 320;
+
+/**
+ * The boxes of `workspaceBar`'s four controls, plus the two boxes that can
+ * clip them: the bar's row and the label's `<p>` (`truncate` =
+ * `overflow: hidden`, so whatever sticks out of it is cut off, not shown).
+ */
+function measureWorkspaceBar(canvasElement: HTMLElement) {
+  const header = bar(canvasElement);
+  const q = within(header);
+  const titleEl = q.getByText(TOPIC_TITLE);
+  return {
+    row: header.getBoundingClientRect(),
+    label: (titleEl.closest("p") as HTMLElement).getBoundingClientRect(),
+    back: q.getByRole("button", { name: "Back" }).getBoundingClientRect(),
+    title: titleEl.getBoundingClientRect(),
+    field: q.getByRole("searchbox", { name: "Search" }).getBoundingClientRect(),
+    gear: q.getByRole("button", { name: "Settings" }).getBoundingClientRect(),
+  };
+}
+type WorkspaceBarBoxes = ReturnType<typeof measureWorkspaceBar>;
+
+/** Sub-pixel slack for "touches but does not overlap". */
+const EDGE_SLACK = 0.5;
+
+/**
+ * Nothing overlaps and nothing is clipped. Oracle: the layout engine's boxes
+ * against each other — the four controls read left to right with no box
+ * reaching into the next, the back button and the title lie inside the
+ * label's clip box, and the gear inside the bar. No number from the
+ * component's code enters.
+ */
+async function expectNoOverlap(g: WorkspaceBarBoxes) {
+  const sequence = [g.back, g.title, g.field, g.gear];
+  for (let i = 0; i + 1 < sequence.length; i++) {
+    await expect(sequence[i].right).toBeLessThanOrEqual(sequence[i + 1].left + EDGE_SLACK);
+  }
+  await expect(g.back.left).toBeGreaterThanOrEqual(g.label.left - EDGE_SLACK);
+  await expect(g.back.right).toBeLessThanOrEqual(g.label.right + EDGE_SLACK);
+  await expect(g.title.right).toBeLessThanOrEqual(g.label.right + EDGE_SLACK);
+  await expect(g.gear.right).toBeLessThanOrEqual(g.row.right + EDGE_SLACK);
+}
+
+/** The field's centre is the bar's centre, within 1px. Oracle: the bar's own box. */
+async function expectCentred(g: WorkspaceBarBoxes) {
+  const fieldCentre = (g.field.left + g.field.right) / 2;
+  const barCentre = (g.row.left + g.row.right) / 2;
+  await expect(Math.abs(fieldCentre - barCentre)).toBeLessThanOrEqual(1);
+}
+
+/**
+ * **0.44.1 — the narrow bar keeps its label (KI-842).** The reproduction of
+ * JustRAG's measured case (KI-838, `KbWorkspaceLayout ›
+ * WorkspaceBarWithScopedSearch`, Chromium, both side columns open at 320px):
+ * a **560px** bar holding a back button and a topic title, a search field and
+ * a gear. The shell is fixed at 1200px (= 560 + 2 × 320) so the bar is 560
+ * whatever the Storybook viewport — only the bar's own width enters its flex
+ * computation.
+ *
+ * **Until 0.44.0** the search kept its full 28rem (448px) here and the two
+ * side regions absorbed the whole shortfall: measured on the claim-base code
+ * in this story, the label's region was 16px wide, the title 0px, and the
+ * back button and the gear each reached 4px into the field.
+ *
+ * **Since 0.44.1** the search shrinks first, down to its floor, while each
+ * side region keeps its own floor of 11rem. Asserted in Chromium:
+ *
+ * 1. the title keeps **at least 120px** (the card's acceptance number, not a
+ *    value from the component);
+ * 2. nothing overlaps and nothing is clipped (`expectNoOverlap`);
+ * 3. the field's centre is the bar's centre **within 1px**;
+ * 4. the bar is 64px.
+ *
+ * Preconditions are asserted too, so the story cannot pass by measuring a
+ * different case: the bar IS 560px and the back button IS 36px.
+ */
+export const NarrowBarKeepsTheLabel: Story = {
+  args: workspaceBar,
+  render: (args) => (
+    <Shell
+      {...args}
+      leftWidth={COLUMN_WIDTH}
+      rightPanel={sourcesPanel(COLUMN_WIDTH)}
+      style={{ width: 560 + 2 * COLUMN_WIDTH }}
+    >
+      <DashboardPage />
+    </Shell>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectBarHeight(canvasElement);
+    const g = measureWorkspaceBar(canvasElement);
+    await expect(g.row.width).toBe(560);
+    await expect(g.back.width).toBe(36);
+
+    await expect(g.title.width).toBeGreaterThanOrEqual(120);
+    // …and `truncate` still does its job: the title is clipped, not wrapped
+    // and not pushing anything aside.
+    const titleEl = within(bar(canvasElement)).getByText(TOPIC_TITLE);
+    await expect(titleEl.scrollWidth).toBeGreaterThan(titleEl.clientWidth);
+    await expectNoOverlap(g);
+    await expectCentred(g);
+  },
+};
+
+/**
+ * **The wide bar is unchanged by 0.44.1**: with room to spare the search is
+ * still capped at **28rem** and centred on the bar, and the side regions share
+ * the rest equally. The shell is fixed at 1280px with the left column at its
+ * 256px default and no right column, so the bar is 1024px.
+ *
+ * Oracle for the width: 28 × the root font size read back from the CSSOM —
+ * the documented `max-w-md` contract of `search`, not a class name or a
+ * number read out of the component.
+ */
+export const WideBarKeepsTheSearchAtItsMaximum: Story = {
+  args: workspaceBar,
+  render: (args) => (
+    <Shell {...args} style={{ width: 1280 }}>
+      <DashboardPage />
+    </Shell>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectBarHeight(canvasElement);
+    const g = measureWorkspaceBar(canvasElement);
+    await expect(g.row.width).toBe(1024);
+
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    await expect(g.field.width).toBe(28 * rem);
+    await expectCentred(g);
+    await expectNoOverlap(g);
+    // Room to spare really is spare: the field does not touch its neighbours.
+    await expect(g.field.left).toBeGreaterThan(g.title.right);
+    await expect(g.field.right).toBeLessThan(g.gear.left);
+  },
+};
+
+/**
+ * **The order in which the bar gives way (0.44.1)**, measured in one shell
+ * narrowed step by step — both columns at 320px, the bar at 1024, 900, 800,
+ * 560, 480 and 300px:
+ *
+ * - **At every step** the field is centred on the bar within 1px, nothing
+ *   overlaps, and the bar is 64px. That is the centring rule: the two side
+ *   regions are identical flex items in every state, so the search sits on
+ *   the bar's exact centre down to the width where the side regions reach
+ *   0 — a bar of 208px (search floor 128 + 2 × 16px gap + 2 × 24px inset),
+ *   which two open columns on an `lg` window do not reach. That last range is
+ *   not asserted.
+ * - **1024 → 900: spare room goes first.** The field stays at its cap, and
+ *   the title loses half of the 124px, 62px — the other half comes off the
+ *   gear's side.
+ * - **800 → 560: then the search.** The bar loses 240px, the field loses
+ *   exactly those 240px, and the title does not lose a pixel.
+ * - **560 → 480: only then the sides.** The field holds its floor, and the
+ *   title loses half of the 80px the bar lost: 40px.
+ *
+ * The oracles are relational — widths at one step against widths at another,
+ * all from Chromium's layout — so they pin the ORDER rather than restating
+ * the component's constants. The bar width is set on the shell's own box
+ * between measurements; React does not re-render, the layout engine re-flows.
+ */
+export const BarGivesWayInOrder: Story = {
+  args: { ...workspaceBar, id: "shrink-order-shell" },
+  render: (args) => (
+    <Shell {...args} leftWidth={COLUMN_WIDTH} rightPanel={sourcesPanel(COLUMN_WIDTH)}>
+      <DashboardPage />
+    </Shell>
+  ),
+  play: async ({ canvasElement }) => {
+    const shell = document.getElementById("shrink-order-shell") as HTMLElement;
+    const at = async (barWidth: number) => {
+      shell.style.width = `${barWidth + 2 * COLUMN_WIDTH}px`;
+      const g = measureWorkspaceBar(canvasElement);
+      await expect(g.row.width).toBe(barWidth);
+      await expectBarHeight(canvasElement);
+      await expectCentred(g);
+      await expectNoOverlap(g);
+      return g;
+    };
+
+    const w1024 = await at(1024);
+    const w900 = await at(900);
+    const w800 = await at(800);
+    const w560 = await at(560);
+    const w480 = await at(480);
+    await at(300);
+
+    // 1024 → 900: the field is at its cap, the side regions give the 124px.
+    await expect(w900.field.width).toBeCloseTo(w1024.field.width, 1);
+    await expect(w1024.title.width - w900.title.width).toBeCloseTo(62, 1);
+    // 800 → 560: the search absorbs the whole 240px, the title none of it.
+    await expect(w800.field.width - w560.field.width).toBeCloseTo(240, 1);
+    await expect(w560.title.width).toBeCloseTo(w800.title.width, 1);
+    // 560 → 480: the search holds, the two sides split the 80px.
+    await expect(w480.field.width).toBeCloseTo(w560.field.width, 1);
+    await expect(w560.title.width - w480.title.width).toBeCloseTo(40, 1);
   },
 };
 
