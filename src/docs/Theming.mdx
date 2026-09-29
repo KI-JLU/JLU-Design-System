@@ -2,15 +2,81 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 <Meta title="Theming" />
 
-# Theming (hell / dunkel / system)
+# Theming
+
+Vier Darstellungs-Achsen, jede als Attribut auf `<html>`, jede von genau einem
+Provider geschrieben. Die Tokens in `tokens.css` lesen die Attribute; eine
+Komponente braucht also **keine Theme-Logik** — mit Tokens stylen, und alle
+Kombinationen funktionieren.
+
+| Achse | Attribut auf `<html>` | Werte (Wahl) | Provider · Hook | `localStorage`-Key (Default) |
+|---|---|---|---|---|
+| Farbschema | `data-theme` | `light` · `dark` · `system` | `ThemeProvider` · `useTheme` | `theme` |
+| Kontrast | `data-contrast` | `normal` · `more` · `system` | `AppearanceProvider` · `useContrast` | `ui-shape-contrast` |
+| Akzentfarbe | `data-accent` | `standard` · `teal` · `violet` · `green` · `rose` · `amber` | `AppearanceProvider` · `useAccent` | `ui-shape-accent` |
+| Stil | `data-ui-shape` | `rounded` · `pill` | `AppearanceProvider` · `useUiShape` | `ui-shape` |
+
+„System" wird in JS aufgelöst, auf `<html>` steht immer der aufgelöste Wert:
+`data-theme` ist `light|dark`, `data-contrast` ist `normal|more`. Beide
+Provider folgen dem OS live, solange „System" gewählt ist.
+
+Der Nutzer stellt alle vier im Einstellungsfenster um: **`AppearanceSettings`**
+sind die fertigen Zeilen dafür (siehe „Components/SettingsDialog"). Neue
+Screens in **beiden** Farbschemata prüfen; Kontrast, Akzent und Stil lassen
+sich in Storybook über die Toolbar für jede Story live umschalten.
+
+## Farbschema (hell / dunkel / system)
 
 - Das aktive Theme liegt auf `<html data-theme="light|dark">`.
 - Der `ThemeProvider` löst die Nutzerwahl (hell / dunkel / system) auf,
   persistiert sie in `localStorage` („theme“) und folgt bei „system“ live dem
-  OS. Umschalten per `<ThemeToggle />` oder `useTheme().setTheme(...)`.
-- Da die Tokens das Theme tragen, brauchen Komponenten **keine Theme-Logik** —
-  mit Tokens stylen, und beide Themes funktionieren. Neue Screens in **beiden**
-  Themes prüfen.
+  OS. Umschalten per `AppearanceSettings`, `<ThemeToggle />` oder
+  `useTheme().setTheme(...)`.
+
+## Kontrast, Akzentfarbe, Stil — der `AppearanceProvider`
+
+Ein Provider für die drei übrigen Achsen, einmal nahe der Wurzel neben dem
+`ThemeProvider` gemountet. `UiShapeProvider` ist dieselbe Komponente unter
+ihrem ersten Namen.
+
+```tsx
+<ThemeProvider>
+  <AppearanceProvider>
+    <App />
+  </AppearanceProvider>
+</ThemeProvider>
+```
+
+- **Kontrast** (`useContrast`): `normal` ist das Design wie gezeichnet
+  (Fokus über Hervorhebungsflächen, zarte Linien). `more` verstärkt Linien und
+  gedämpften Text (`outline-variant` → `outline`, `on-surface-variant` →
+  `on-surface`) und erzwingt auf **jedem** fokussierbaren Element einen
+  sichtbaren Fokusrahmen (3px `focus-ring`, `!important`, weil Komponenten
+  ihre eigene Outline abschalten). `system` folgt `prefers-contrast: more`
+  bzw. einem Forced-Colors-Theme des OS — der barrierearme Default dort, wo
+  das Gerät danach fragt.
+- **Akzentfarbe** (`useAccent`, `ACCENT_COLORS`): `standard` ist das JLU-Blau;
+  jede andere Familie ersetzt die ganze `primary`-Familie in hell **und**
+  dunkel, alles in `primary` Gezeichnete folgt ihr. `AccentSwatch` zeigt die
+  Farbe in einem Picker (`--accent-swatch-<accent>`).
+- **Stil** (`useUiShape`): `rounded` (abgerundet eckig) oder `pill`.
+  Komponenten mit Formvariante lesen ihn über den Hook (`PromptInput`,
+  `SidebarCard`, `SidebarRailItem`, `SidebarUserMenu`, `SettingsDialog` …);
+  `NavItem`, `Input`, `SelectTrigger` und `DropdownMenu` folgen ihm über
+  `--ui-radius-control`. Dieselben Variablen
+  `--ui-radius-card/box/control/tile` tragen ihn in eigenes CSS der App. Eine
+  explizite `shape`-Prop an einer Komponente gewinnt weiterhin.
+- `defaultShape` / `defaultContrast` / `defaultAccent` gelten, solange nichts
+  gespeichert ist; `storageKey` (Default `ui-shape`) benennt den Key des Stils,
+  Kontrast und Akzent liegen unter `<key>-contrast` / `<key>-accent`.
+- Ohne `AppearanceProvider` liefern die drei Hooks ihre Defaults (`system` /
+  `standard` / `rounded`) und die Setter tun nichts.
+
+Das No-Flash-Skript unten deckt nur `data-theme` ab. Für die drei anderen
+Achsen gibt es keines: bis der `AppearanceProvider` gemountet ist, gelten die
+`:root`-Defaults (normaler Kontrast, JLU-Blau, abgerundet), eine gespeicherte
+andere Wahl erscheint also erst danach.
+{/* TODO: an extended no-flash script for data-contrast / data-accent / data-ui-shape — not written or tested yet. */}
 
 ## ThemeProvider: unkontrolliert vs. kontrolliert
 

@@ -201,6 +201,12 @@ export { useScrollFade } from "./lib/use-scroll-fade";
 export { ContentPanel, PanelSection, type ContentPanelProps, type PanelSectionProps } from "./components/content-panel";
 /** The settings window (section nav + search + rows). */
 export { SettingsDialog, SettingsRow, type SettingsDialogProps, type SettingsSection, type SettingsRowProps } from "./components/settings-dialog";
+/** The appearance rows of a settings section: colour scheme, contrast, accent, Style — wired to their providers. */
+export {
+  AppearanceSettings,
+  type AppearanceSettingsProps,
+  type AppearanceSettingsLabels,
+} from "./components/appearance-settings";
 export {
   Toast,
   ToastAction,
