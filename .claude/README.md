@@ -3,16 +3,22 @@
 Adapted from the CampusAgents `.claude/` harness, itself adapted from
 [agent-loop](https://github.com/StenSeegel/agent-loop) (branch `interactive`).
 
-**The developer talks to one session: the project manager.** It plans, records state on the kanban
-board, and delegates the implementation of every card to subagents. Ad-hoc requests — investigate,
-explain, tweak, set up, probe — it handles itself, unreviewed and reported as such. The guarded
+**The developer talks to one session: the project manager.** It runs two lanes. **Quick edits**,
+the default for change requests in conversation, it makes itself, right away, on a `dev/<topic>`
+branch. They pile up as one batch that is **reviewed once, by a `code-review` skill run, when the
+developer ships it**. **Board cards** it delegates to subagents, and each card gets the independent
+`code-reviewer`. Ad-hoc read-only work (investigate, explain, probe) it handles itself. The guarded
 paths (the harness's own settings/hooks/tools, `.githooks/`, CI workflows, container/proxy config)
-are never its own, whichever route the request took.
+are never its own, whichever lane the request took.
 
 ```
 developer ──▶ project-manager (main session, this is you)
-                │   ad-hoc request ──▶ handled here, directly, NOT reviewed by anyone;
-                │                      the guarded paths stay refused (PreToolUse hook)
+                │   quick edit ──▶ made here, directly, on dev/<topic>; edits pile up
+                │                  as ONE batch ──▶ on "ship": five gates + ONE code-review
+                │                  skill run ──▶ fix findings, commit, PR, merge
+                │                  (the guarded paths stay refused: PreToolUse hook)
+                │
+                │   board card ──▶ the pipeline below
                 │
                 ├─ planner ............ splits a large request into 2–6 cards
                 ├─ researcher ......... read-only CONTEXT BRIEF before an expensive worker
@@ -46,6 +52,12 @@ Where this port disagrees with the CampusAgents harness it was taken from, that 
   the next workable card — the loop ends only when `To Do` and `In Progress` are empty (see "The PM
   loop" in the `kanban-doku` skill). Cards blocked on the developer go to `Needs Decision` and the
   loop continues past them.
+- **Quick edits are batched and reviewed once at ship time** (developer-mandated, 2026-09-30).
+  Sending every edit through a worker and the `code-reviewer` made a five-minute tweak take two
+  hours. Now change requests made in conversation are quick edits by default. The PM makes them
+  itself, and the batch gets one `code-review` skill run when the developer ships it. Board cards
+  keep the full pipeline. The PM asks "quick lane or card?" before it takes a new component, a
+  public-API break or a multi-concern change into the quick lane.
 - **Parallel work in temporary worktrees.** Upstream ran one agent at a time in the one working
   tree. Here every worker gets a temporary git worktree on its own branch (CLAUDE.md rule), parallel
   workers are allowed on **disjoint file surfaces**, and the PM keeps the surfaces disjoint.
@@ -79,8 +91,10 @@ Where this port disagrees with the CampusAgents harness it was taken from, that 
 runs full reviews cost 98k–180k tokens and the first real run of the cheap tier cost 114k, squarely
 inside the same band. The cheap half was only the *reading* — the judge still had to run the gates
 and re-derive every finding against the code, which is the job. So independence costs what it costs
-and every card gets it. There is no cheaper tier and no size threshold: work that never becomes a
-card is not a light review, it is **no** review, and it is reported that way.
+and every card gets it. There is no cheaper tier and no size threshold *within the pipeline*.
+The quick-edit lane (above) is not a tier of this review. It is a separate lane, chosen by the
+developer, whose batches get a `code-review` skill run at ship time. It is reported as that
+review and never as the `code-reviewer`'s verdict.
 
 The verdict deliberately does **not** sit with the PM. The PM plans the work, spawns the worker and
 wants the card closed; letting it rule on the findings against that work would hand the executor a
@@ -118,7 +132,8 @@ cross-review found four real defects in it that a reviewer reading its own defin
   must read an existing `review: comments` out to the developer, because a yellow label nobody
   mentions is as ineffective as the buried paragraph it replaces.
 - **A review is never silently skipped — and never silently faked.** Every card gets the one review
-  path, and work that never became a card is reported as unreviewed in as many words.
+  path. Every quick-edit batch gets its one `code-review` run before it is committed. An edit that
+  has not shipped yet is reported as unreviewed, in as many words.
 - **A boundary that is judged by prose gets a wrong answer eventually; encode it and test it.** The
   card's file set failed three review rounds upstream as prose — twice because of a wrong belief
   about what `git status` prints. As code it has an oracle, and the git edge cases are tested
