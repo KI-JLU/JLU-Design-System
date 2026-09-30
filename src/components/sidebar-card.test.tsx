@@ -198,6 +198,60 @@ describe("SidebarPanel", () => {
   });
 });
 
+describe("SidebarPanel without title, head or nav", () => {
+  // Oracle: the props handed in and DOM containment — which slots a test
+  // passes decides whether a head exists, not anything the component computes.
+  // No class is asserted: the head-less panel's 16px top inset is a layout
+  // fact, and its oracle is Chromium's layout boxes in
+  // `Templates/AppShellLayout → CollapsedRailKeepsVerticalPositions` (KI-852).
+  const headOf = (container: HTMLElement) =>
+    container.querySelector('[data-slot="sidebar-panel-head"]');
+
+  it("renders no head, and the children still go into the scroll area", async () => {
+    const { SidebarPanel } = await import("./sidebar-panel");
+    const { container } = render(
+      <SidebarPanel>
+        <button type="button">Übersicht</button>
+      </SidebarPanel>,
+    );
+    expect(headOf(container)).toBeNull();
+    const row = screen.getByRole("button", { name: "Übersicht" });
+    expect(row.closest('[data-slot="sidebar-scroll-area"]')).not.toBeNull();
+    expect(row.closest('[data-slot="sidebar-panel"]')).toBe(container.firstElementChild);
+  });
+
+  it("treats a head React renders as nothing as not passed", async () => {
+    const { SidebarPanel } = await import("./sidebar-panel");
+    for (const head of [null, undefined, false, ""]) {
+      const { container, unmount } = render(<SidebarPanel head={head}>x</SidebarPanel>);
+      expect(headOf(container), `head=${JSON.stringify(head)}`).toBeNull();
+      unmount();
+    }
+  });
+
+  it("keeps no head for a titleAside alone — it only renders beside a title", async () => {
+    const { SidebarPanel } = await import("./sidebar-panel");
+    const { container } = render(<SidebarPanel titleAside={<span>3</span>}>x</SidebarPanel>);
+    expect(headOf(container)).toBeNull();
+  });
+
+  it("renders the head as soon as any one of title, head or nav is passed", async () => {
+    const { SidebarPanel } = await import("./sidebar-panel");
+    const cases = [
+      { name: "title", props: { title: "Verlauf" }, marker: () => screen.getByRole("heading", { name: "Verlauf" }) },
+      { name: "head", props: { head: <button type="button">Neu</button> }, marker: () => screen.getByRole("button", { name: "Neu" }) },
+      { name: "nav", props: { nav: <button type="button">Start</button> }, marker: () => screen.getByRole("button", { name: "Start" }) },
+    ];
+    for (const { name, props, marker } of cases) {
+      const { container, unmount } = render(<SidebarPanel {...props}>x</SidebarPanel>);
+      const head = headOf(container);
+      expect(head, name).not.toBeNull();
+      expect(head, name).toContainElement(marker());
+      unmount();
+    }
+  });
+});
+
 describe("HoverCardContent", () => {
   // Oracle: DOM containment — a portaled card is not a descendant of the
   // scroll container that holds its trigger.
