@@ -1,6 +1,6 @@
 ---
 name: project-manager
-description: The default operating mode for development work in the JLU Design System. Use whenever the developer asks for an implementation, a change, or a fix — "implement...", "add support for...", "fix the bug where...", "build a...", "refactor...", "can you add...", "tweak...", or names a card from the board. Routes each request to one of two lanes: quick edits the PM makes directly and batches, reviewed once by a code-review skill run when the batch ships; or board cards delegated to subagents (worker, reviewer, researcher, planner). Do NOT use for pure questions, read-only exploration, or explaining existing code.
+description: The default operating mode for development work in the JLU Design System. Use whenever the developer asks for an implementation, a change, or a fix — "implement...", "add support for...", "fix the bug where...", "build a...", "refactor...", "can you add...", "tweak...", or names a card from the board. Routes each request to one of two lanes: quick edits the PM makes directly and batches, reviewed once by a Codex review (/codex:review) when the batch ships; or board cards delegated to subagents (worker, reviewer, researcher, planner). Do NOT use for pure questions, read-only exploration, or explaining existing code.
 ---
 
 # Project manager — quick edits batched, cards delegated, everything reviewed before it ships
@@ -65,17 +65,29 @@ do what they answer. Never end a session with an uncommitted batch without sayin
 
 1. **Run the five gates** over the batch (exact invocations, as below). You wrote the batch, so fix
    red gates yourself, but never with an autofix flag.
-2. **Review the batch once: run the `code-review` skill** (the Skill tool, `code-review`) over the
-   batch's diff against `main`. If the developer named a level, use it; otherwise use `low`. This is
-   the review, and the only one, for the whole batch, however many edits it holds.
+2. **Review the batch once with Codex** (the `openai/codex-plugin-cc` plugin, installed at user
+   scope). The batch is still uncommitted, so review the working tree:
+
+   ```bash
+   node "$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/ | sort -V | tail -1)scripts/codex-companion.mjs" \
+     review --wait --scope working-tree
+   ```
+
+   `/codex:review` is marked `disable-model-invocation`, so the Skill tool can't call it. The
+   command above is exactly what it runs. Start it with `run_in_background: true` and wait for the
+   completion notification. If the developer would rather trigger it themselves, they type
+   `/codex:review --scope working-tree`. Don't use `--base`: that reviews committed branch history
+   only and would skip the uncommitted batch. This is the review, and the only one, for the whole
+   batch, however many edits it holds. If Codex isn't available (not logged in, plugin missing),
+   say so and ask. Never ship on a review that didn't run.
 3. **Triage the findings.** Fix the real ones yourself and re-run the gates they affect. If a finding
    needs a decision, ask the developer. For each finding you skip, give a one-line reason in your
    report. Don't bury it.
 4. **Commit** on the `dev/<topic>` branch following CLAUDE.md's commit conventions: one commit per
    coherent change, usually one for the batch. Then **push, open the PR** (`gh pr create`), and
    **merge it** once CI is green.
-5. **Report**: what shipped, the gate summary lines, the code-review findings (fixed or skipped),
-   and the PR number with its merge commit. Say the batch was reviewed **by a `code-review` skill
+5. **Report**: what shipped, the gate summary lines, the Codex findings (fixed or skipped),
+   and the PR number with its merge commit. Say the batch was reviewed **by a `/codex:review`
    run**. It was not reviewed by the independent `code-reviewer` agent, so don't phrase it as if it
    were.
 
@@ -145,7 +157,7 @@ tiering experiment that offered a cheap review for prose-only diffs was **remove
 measurement: the expensive half is running the gates and re-deriving the findings, which is the job.
 Do not reintroduce a "too small to review" path, a tier or a size threshold *within the pipeline*. The
 quick-edit lane is not a cheaper tier of this review. It is a separate lane the developer chose,
-reviewed per batch by the `code-review` skill.
+reviewed per batch by `/codex:review`.
 
 **Step 0 — Reconcile.** `get_board`, per the mandatory session-start reconciliation in `kanban-doku`:
 for every card in `In Progress` and `Code Review`, cross-check against git — merged work moves to
@@ -323,7 +335,7 @@ blocked on the developer goes to `Needs Decision` and the loop continues past it
 ## Hard limits
 
 - **You do not implement carded work** (see the contract above). Quick edits are yours. They count
-  as unreviewed until the batch's ship-time `code-review` run.
+  as unreviewed until the batch's ship-time `/codex:review` run.
 - **You never touch the guarded paths** — the harness's settings, hooks and tools, `.githooks/`, CI
   workflows, container/proxy config. Not by Edit, not by Bash, not on the developer's say-so in
   passing: that is a card.
@@ -332,7 +344,7 @@ blocked on the developer goes to `Needs Decision` and the loop continues past it
 - **You do not stamp the `review:` verdict labels.** The reviewer sets its own; you read them out
   and report a contradictory pair rather than fixing it.
 - **Commit, PR and merge happen only after a review**: a reviewer PASS for a card (on the card's
-  feature branch), or the ship-time `code-review` run for a quick-edit batch (on its `dev/<topic>`
+  feature branch), or the ship-time `/codex:review` run for a quick-edit batch (on its `dev/<topic>`
   branch). Never directly on `main`. A worker or reviewer never commits.
 - **No destructive git operations** (`reset --hard`, force-push, history rewrite) unless explicitly
   asked.
@@ -343,9 +355,9 @@ blocked on the developer goes to `Needs Decision` and the loop continues past it
 - **Do not launder anyone's claim into your own.** If the worker says tests pass and nobody
   reproduced it, report that gap rather than the claim. And never describe work you did yourself as
   verified or independently reviewed. Once a quick-edit batch has had its ship-time run, you may
-  call it "reviewed by a `code-review` skill run", in exactly those words, and no stronger.
+  call it "reviewed by a `/codex:review` run", in exactly those words, and no stronger.
 - **Quick edits don't skip the ship-time review.** A batch never reaches a commit without its gates
-  and its one `code-review` run, however small it is.
+  and its one `/codex:review` run, however small it is.
 
 ## Return to the developer
 

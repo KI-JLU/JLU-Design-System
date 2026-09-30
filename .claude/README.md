@@ -5,7 +5,7 @@ Adapted from the CampusAgents `.claude/` harness, itself adapted from
 
 **The developer talks to one session: the project manager.** It runs two lanes. **Quick edits**,
 the default for change requests in conversation, it makes itself, right away, on a `dev/<topic>`
-branch. They pile up as one batch that is **reviewed once, by a `code-review` skill run, when the
+branch. They pile up as one batch that is **reviewed once, by a Codex `/codex:review` run, when the
 developer ships it**. **Board cards** it delegates to subagents, and each card gets the independent
 `code-reviewer`. Ad-hoc read-only work (investigate, explain, probe) it handles itself. The guarded
 paths (the harness's own settings/hooks/tools, `.githooks/`, CI workflows, container/proxy config)
@@ -14,8 +14,8 @@ are never its own, whichever lane the request took.
 ```
 developer ──▶ project-manager (main session, this is you)
                 │   quick edit ──▶ made here, directly, on dev/<topic>; edits pile up
-                │                  as ONE batch ──▶ on "ship": five gates + ONE code-review
-                │                  skill run ──▶ fix findings, commit, PR, merge
+                │                  as ONE batch ──▶ on "ship": five gates + ONE /codex:review
+                │                  run (working tree) ──▶ fix findings, commit, PR, merge
                 │                  (the guarded paths stay refused: PreToolUse hook)
                 │
                 │   board card ──▶ the pipeline below
@@ -55,7 +55,7 @@ Where this port disagrees with the CampusAgents harness it was taken from, that 
 - **Quick edits are batched and reviewed once at ship time** (developer-mandated, 2026-09-30).
   Sending every edit through a worker and the `code-reviewer` made a five-minute tweak take two
   hours. Now change requests made in conversation are quick edits by default. The PM makes them
-  itself, and the batch gets one `code-review` skill run when the developer ships it. Board cards
+  itself, and the batch gets one `/codex:review` run when the developer ships it. Board cards
   keep the full pipeline. The PM asks "quick lane or card?" before it takes a new component, a
   public-API break or a multi-concern change into the quick lane.
 - **Parallel work in temporary worktrees.** Upstream ran one agent at a time in the one working
@@ -93,7 +93,7 @@ inside the same band. The cheap half was only the *reading* — the judge still 
 and re-derive every finding against the code, which is the job. So independence costs what it costs
 and every card gets it. There is no cheaper tier and no size threshold *within the pipeline*.
 The quick-edit lane (above) is not a tier of this review. It is a separate lane, chosen by the
-developer, whose batches get a `code-review` skill run at ship time. It is reported as that
+developer, whose batches get a `/codex:review` run at ship time. It is reported as that
 review and never as the `code-reviewer`'s verdict.
 
 The verdict deliberately does **not** sit with the PM. The PM plans the work, spawns the worker and
@@ -132,7 +132,7 @@ cross-review found four real defects in it that a reviewer reading its own defin
   must read an existing `review: comments` out to the developer, because a yellow label nobody
   mentions is as ineffective as the buried paragraph it replaces.
 - **A review is never silently skipped — and never silently faked.** Every card gets the one review
-  path. Every quick-edit batch gets its one `code-review` run before it is committed. An edit that
+  path. Every quick-edit batch gets its one `/codex:review` run before it is committed. An edit that
   has not shipped yet is reported as unreviewed, in as many words.
 - **A boundary that is judged by prose gets a wrong answer eventually; encode it and test it.** The
   card's file set failed three review rounds upstream as prose — twice because of a wrong belief

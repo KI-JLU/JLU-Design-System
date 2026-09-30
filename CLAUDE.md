@@ -3,9 +3,9 @@
 ## Dev harness
 
 This repo runs an agent-loop port: **the main session is the project manager**. Quick edits it
-makes itself, batched on a `dev/<topic>` branch and reviewed once by a `code-review` skill run when
-the batch ships. Board cards it delegates to subagents in temporary worktrees, with an independent
-`code-reviewer`. See `.claude/README.md` (architecture, guard, deviations from upstream) and
+makes itself, batched on a `dev/<topic>` branch and reviewed once by Codex (`/codex:review`, plugin
+`openai/codex-plugin-cc`) when the batch ships. Board cards it delegates to subagents in temporary
+worktrees, with an independent `code-reviewer`. See `.claude/README.md` (architecture, guard, deviations from upstream) and
 `.claude/skills/project-manager/` (both lanes and the PM loop).
 
 ## Parallel work runs in a temporary worktree — always
