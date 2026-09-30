@@ -1,0 +1,66 @@
+import { Meta, Canvas, Controls } from "@storybook/addon-docs/blocks";
+import * as SidebarUserMenuStories from "./sidebar-user-menu.stories";
+
+<Meta of={SidebarUserMenuStories} />
+
+# SidebarUserMenu
+
+Das Nutzermenü im Footer der Seitenleiste: Initialen-Avatar, Name über Rolle,
+ein Chevron — die ganze Zeile ist der Trigger eines `DropdownMenu`. Ersetzt den
+Block, den jede App in ihrem Sidebar-Footer selbst gebaut hatte. Name und
+Rolle werden abgeschnitten, lange Werte verbreitern die 256px-Spalte also nie.
+
+<Canvas of={SidebarUserMenuStories.Playground} />
+
+<Controls />
+
+## Aufteilung
+
+Die Komponente besitzt den **Trigger und den Rahmen des Menüs**; die
+Einträge sind `children` (`DropdownMenuItem`s) und gehören der App — mit ihren
+Aktionen und ihrem Routing. Ein Link wird mit `asChild` zum Menüeintrag
+(siehe „TruncatesLongValues").
+
+```tsx
+<SidebarUserMenu initials="JL" name="Jamie Lee" role="Admin">
+  <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
+    <Settings width="1em" height="1em" aria-hidden />
+    Einstellungen
+  </DropdownMenuItem>
+  <DropdownMenuSeparator />
+  <DropdownMenuItem variant="destructive" onSelect={signOut}>
+    <LogOut width="1em" height="1em" aria-hidden />
+    Abmelden
+  </DropdownMenuItem>
+</SidebarUserMenu>
+```
+
+| Prop | Typ | Bedeutung |
+|---|---|---|
+| `initials` | `string` | 1–2 Zeichen für den Avatar, z. B. „JL". |
+| `name` | `ReactNode` | Anzeigename, die hervorgehobene erste Zeile. |
+| `role` | `ReactNode` | Zweite Zeile (Rolle, E-Mail, Mandant …); optional. |
+| `children` | `ReactNode` | Die Menüeinträge. |
+
+## „Einstellungen" öffnet den SettingsDialog
+
+Der Eintrag „Einstellungen" setzt per `onSelect` den `open`-Zustand eines
+kontrollierten `SettingsDialog`; dessen Abschnitt „Darstellung" ist
+`AppearanceSettings` (Farbschema, Kontrast, Akzentfarbe, Stil). In dieser
+Story an die echten Provider des Storybook-Decorators gebunden — eine Wahl im
+Dialog stellt die ganze Canvas um. Details und die bekannte Fokus-Lücke nach
+dem Schließen: Storybook „Components/SettingsDialog" → Docs.
+
+<Canvas of={SidebarUserMenuStories.OpensSettings} />
+
+## Eingeklappt
+
+In einer eingeklappten Seitenleiste schrumpft der Trigger auf den Avatar
+allein (rund, Icon-Größe, ohne Chevron). Das Menü wird **behalten**, nicht
+versteckt: es ist der einzige Weg zum Abmelden, und ein Bedienelement, das
+beim Einklappen verschwindet, würde das Einklappen verlustbehaftet machen. Name
+und Rolle bleiben als `sr-only` im DOM, damit der zugängliche Name des
+Triggers in beiden Zuständen **derselbe String** ist.
+
+Der Eckenradius des Triggers folgt dem app-weiten Stil (`useUiShape`), wie die
+`SidebarCard`s darüber.

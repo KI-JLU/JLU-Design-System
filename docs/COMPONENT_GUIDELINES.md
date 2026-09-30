@@ -609,6 +609,10 @@ component means adding the utility in the same commit.
 - The active theme is on `<html data-theme="light|dark">`, set by
   [`ThemeProvider`](../src/theme/ThemeContext.tsx) and a no-flash script in
   `index.html`. Users switch it with [`ThemeToggle`](../src/components/theme-toggle.tsx).
+- Contrast, accent colour and Style sit beside it on `<html data-contrast
+  data-accent data-ui-shape>`, held by `AppearanceProvider`. A settings window
+  offers all four with [`AppearanceSettings`](../src/components/appearance-settings.tsx)
+  inside a `SettingsDialog` section — never rebuild those rows in the app.
 - Because tokens carry the theme, **components need no theme awareness** — style
   with tokens and both themes work. Verify new screens in **both** themes.
 - Read the current theme with `useTheme()` only when logic truly depends on it

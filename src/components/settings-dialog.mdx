@@ -1,0 +1,129 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as SettingsDialogStories from "./settings-dialog.stories";
+import * as SidebarUserMenuStories from "./sidebar-user-menu.stories";
+
+<Meta of={SettingsDialogStories} />
+
+# SettingsDialog
+
+Das Einstellungsfenster einer App: links eine Spalte mit Suche und einer Zeile
+je Abschnitt, rechts der gewählte Abschnitt unter seinem Titel, oben rechts
+der Schließen-Button wie bei jedem `Dialog`. Radix-Dialog darunter —
+Fokusfalle, Escape und Scroll-Sperre inklusive. Der Eckenradius folgt dem
+app-weiten Stil (`useUiShape`).
+
+Der Inhalt gehört der App: jeder Abschnitt ist eine Liste von
+`SettingsRow`s (Beschriftung + Beschreibung links, Bedienelement rechts,
+Linie darunter). Für die Darstellung liefert das Paket die fertigen Zeilen
+mit — **`AppearanceSettings`**.
+
+<Canvas of={SettingsDialogStories.Default} />
+
+## `AppearanceSettings` — der Abschnitt „Darstellung"
+
+Vier `SettingsRow`s, jede mit einem DS-`Select`, jede direkt an den Provider
+gebunden, dem die Einstellung gehört:
+
+| Zeile | Werte | Hook | Wirkung |
+|---|---|---|---|
+| Farbschema | System / Hell / Dunkel | `useTheme` (`ThemeProvider`) | `<html data-theme>` |
+| Kontrast | System / Normal / Erhöht | `useContrast` (`AppearanceProvider`) | `<html data-contrast>` |
+| Akzentfarbe | die sechs `ACCENT_COLORS`, je mit `AccentSwatch` | `useAccent` (`AppearanceProvider`) | `<html data-accent>` |
+| Stil | Abgerundet eckig / Pille | `useUiShape` (`AppearanceProvider`) | `<html data-ui-shape>` |
+
+Die Komponente hält **keinen eigenen Zustand**: eine Wahl ruft den Setter des
+Providers, der Provider speichert sie (`localStorage`) und spiegelt sie auf
+`<html>` — genau wie für jeden anderen Aufrufer. Was die Zeilen anzeigen, ist
+daher immer das, was gerade gilt, auch wenn es anderswo (z. B. über die
+Storybook-Toolbar) umgestellt wurde.
+
+```tsx
+import { AppearanceSettings, SettingsDialog } from "@ki4jlu/design-system";
+
+<SettingsDialog
+  open={open}
+  onOpenChange={setOpen}
+  sections={[
+    {
+      value: "appearance",
+      label: "Darstellung",
+      icon: <Palette aria-hidden="true" />,
+      // Die Zeilenbeschriftungen, damit die Suche den Abschnitt findet.
+      keywords: ["Farbschema", "Kontrast", "Akzentfarbe", "Stil"],
+      content: <AppearanceSettings />,
+    },
+    // … die eigenen Abschnitte der App (Profil, API-Schlüssel, …)
+  ]}
+/>
+```
+
+- **Voraussetzung:** ein `ThemeProvider` darüber (`useTheme` wirft ohne ihn)
+  und ein `AppearanceProvider`. Fehlt der `AppearanceProvider`, zeigen
+  Kontrast, Akzent und Stil ihre Defaults und eine Wahl bewirkt nichts — das
+  dokumentierte Nur-Lese-Verhalten der Hooks.
+- **Fragment, kein Wrapper.** Die Zeilen werden ohne umschließendes Element
+  gerendert. So lassen sie sich im selben Abschnitt mit eigenen Zeilen der App
+  mischen (z. B. eine Sprachwahl darunter), und die Linien zwischen den
+  Zeilen bleiben durchgehend.
+- **Beschriftungen:** alle Texte sind über `labels` überschreibbar
+  (`AppearanceSettingsLabels`, deutsche Defaults). Nicht gesetzte oder
+  `undefined` gesetzte Schlüssel behalten den Default; `null` oder `""` an
+  einer `*Description` entfernt die Beschreibung. `accents` überschreibt nur
+  die Namen, die es enthält.
+
+```tsx
+<AppearanceSettings
+  labels={{
+    theme: "Colour scheme", themeLight: "Light", themeDark: "Dark", themeSystem: "System",
+    contrast: "Contrast", contrastNormal: "Normal", contrastMore: "Increased",
+    contrastDescription: "Increased: clear focus rings and stronger lines.",
+    accent: "Accent colour", accents: { standard: "Default", teal: "Teal" },
+    shape: "Style", shapeRounded: "Rounded square", shapePill: "Pill",
+  }}
+/>
+```
+
+- **Barrierefreiheit:** jeder `Select` ist per `aria-labelledby` nach seiner
+  Zeilenbeschriftung benannt und per `aria-describedby` mit der
+  Zeilenbeschreibung verknüpft, sofern es eine gibt.
+
+### Bewusst nicht enthalten
+
+Sprache, Profilfelder, API-Schlüssel und app-eigene Schalter (Vorschläge,
+Folgefragen, …) bleiben in der App. Sie hängen an App-Zustand und i18n, die
+das Paket nicht kennt; die App setzt sie als eigene `SettingsRow`s neben
+`<AppearanceSettings />` oder in eigene Abschnitte.
+
+## Öffnen aus dem Nutzermenü
+
+Der übliche Weg ins Fenster ist „Einstellungen" im `SidebarUserMenu`: der
+Menüeintrag setzt per `onSelect` den `open`-Zustand, den der `SettingsDialog`
+kontrolliert bekommt.
+
+<Canvas of={SidebarUserMenuStories.OpensSettings} />
+
+```tsx
+const [settingsOpen, setSettingsOpen] = useState(false);
+
+<SidebarUserMenu initials="JL" name="Jamie Lee" role="Admin">
+  <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
+    <Settings width="1em" height="1em" aria-hidden />
+    Einstellungen
+  </DropdownMenuItem>
+</SidebarUserMenu>
+<SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} sections={sections} />
+```
+
+Die Story prüft im Browser (Chromium), dass das Menü hinter dem Dialog
+schließt und die Seite nach dem Schließen wieder bedienbar ist (kein
+hängendes `pointer-events: none` auf `<body>`).
+
+### Bekannte Lücke: Fokus nach dem Schließen
+
+Nach dem Schließen landet der Fokus auf `<body>`, nicht wieder auf dem
+Element, das das Fenster geöffnet hat (WCAG 2.4.3). Ursache: Radix' modaler
+Dialog setzt den Fokus beim Schließen immer auf seinen eigenen
+`DialogTrigger` — `SettingsDialog` rendert keinen, weil er kontrolliert
+geöffnet wird. Das gilt für jeden Öffnungsweg, ein einfacher Button
+eingeschlossen; `setOpen` zu verzögern (`setTimeout`, `requestAnimationFrame`)
+ändert daran nichts (gemessen). Noch nicht behoben — als Folgekarte gemeldet.

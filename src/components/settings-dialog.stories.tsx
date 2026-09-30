@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { Settings, User } from "lucide-react";
+import { Palette, User } from "lucide-react";
 import { SettingsDialog, SettingsRow } from "./settings-dialog";
+import { AppearanceSettings } from "./appearance-settings";
 import { Button } from "./button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 
 const meta = {
   title: "Components/SettingsDialog",
@@ -15,13 +15,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 function Demo() {
-  const [open, setOpen] = useState(true);
-  const choice = (items: [string, string][], value: string) => (
-    <Select defaultValue={value}>
-      <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-      <SelectContent>{items.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
-    </Select>
-  );
+  // Starts closed: the dialog is modal and would cover the canvas (and the
+  // docs page) on load. The button is the trigger an app would have.
+  const [open, setOpen] = useState(false);
   return (
     <div className="p-6">
       <Button onClick={() => setOpen(true)}>Einstellungen öffnen</Button>
@@ -30,22 +26,21 @@ function Demo() {
         onOpenChange={setOpen}
         sections={[
           {
-            value: "general",
-            label: "Allgemein",
-            icon: <Settings aria-hidden="true" />,
-            keywords: ["Darstellung", "Stil", "Sprache"],
-            content: (
-              <>
-                <SettingsRow label="Darstellung" control={choice([["system", "System"], ["light", "Hell"], ["dark", "Dunkel"]], "system")} />
-                <SettingsRow label="Stil" description="Abgerundete Ecken oder Pillenform." control={choice([["rounded", "Abgerundet eckig"], ["pill", "Pille"]], "rounded")} />
-                <SettingsRow label="Sprache" control={choice([["de", "Deutsch"], ["en", "English"]], "de")} />
-              </>
-            ),
+            value: "appearance",
+            label: "Darstellung",
+            icon: <Palette aria-hidden="true" />,
+            // The row labels, so the search finds the section by them.
+            keywords: ["Farbschema", "Kontrast", "Akzentfarbe", "Stil"],
+            // Wired to the real providers: the Storybook decorator mounts
+            // ThemeProvider + AppearanceProvider, so a choice here restyles the
+            // whole canvas (the toolbar's next change wins again).
+            content: <AppearanceSettings />,
           },
           {
             value: "profile",
             label: "Profil",
             icon: <User aria-hidden="true" />,
+            keywords: ["Benutzername", "E-Mail"],
             content: (
               <>
                 <SettingsRow label="Benutzername" control={<span className="text-on-surface-variant">@grace</span>} />
@@ -60,6 +55,6 @@ function Demo() {
 }
 
 export const Default: Story = {
-  args: { open: true, onOpenChange: () => {}, sections: [] },
+  args: { open: false, onOpenChange: () => {}, sections: [] },
   render: () => <Demo />,
 };

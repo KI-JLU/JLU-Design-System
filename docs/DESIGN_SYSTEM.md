@@ -99,7 +99,9 @@ consuming repo** — new exceptions get the same scrutiny there.
   Consumers add the no-flash inline script to their `index.html` **before
   first paint** (see Storybook „Theming"; keep it in sync with the provider —
   without it the page flashes the light theme before React mounts). Users
-  switch via [`ThemeToggle`](../src/components/theme-toggle.tsx).
+  switch via [`ThemeToggle`](../src/components/theme-toggle.tsx), or — together
+  with contrast, accent and Style (`AppearanceProvider`) — in a settings window
+  via [`AppearanceSettings`](../src/components/appearance-settings.tsx).
 - **Controlled mode**: a consumer that already owns theme state passes
   `theme` + `onThemeChange` — the provider then reads/writes no
   `localStorage` and keeps no internal choice; `setTheme` only calls
@@ -189,6 +191,7 @@ consuming repo** — new exceptions get the same scrutiny there.
 | `ChatStage` | `chat-stage.tsx` | **0.43.0.** The column of a full-page chat: content (messages or empty state), `composer`, and a `footer` (disclaimer, `footerId`) pinned to the bottom. `empty` centres content + composer together (auto margins, a tall empty state scrolls instead of clipping); with messages the content fills and the composer docks. Deliberately no layout animation. The card-framed widget stays `ChatLayout` |
 | `PromptSuggestions` | `prompt-suggestions.tsx` | **0.43.0.** Starter prompts beneath the composer of an empty chat: a header (icon, headline, previous/next stepping one suggestion while the row overflows, optional close that fades it out with its space kept, then calls `onDismiss`) over every suggestion in one row, scrolling sideways and faded at the edges (`useScrollFade({ axis: "x" })`); `onSelect` gets the trimmed text; `revealDelay` fades the whole component in after a pause, its space kept meanwhile; radius follows the Style (`--ui-radius-control`) |
 | `SettingsDialog` / `SettingsRow` | `settings-dialog.tsx` | **0.43.0.** The settings window: left column (search, one `NavItem` per section), close top-right like every Dialog, the section on the right under its title; search filters by label and `keywords`. `SettingsRow` = label + description left, control right, rule below. Radius follows the app-wide Style |
+| `AppearanceSettings` (+ `AppearanceSettingsLabels`) | `appearance-settings.tsx` | **Unreleased (KI-850) — set the version at release.** The appearance rows of a settings section, as `SettingsRow`s in a fragment (no wrapper, so they mix with an app's own rows): colour scheme (`useTheme`), contrast (`useContrast`), accent colour (`useAccent`, each option with an `AccentSwatch`) and Style (`useUiShape`), each a DS `Select` named by its row label (`aria-labelledby`) and described by its row description. No state of its own — a choice calls the provider's setter, which persists it and writes `<html data-theme / data-contrast / data-accent / data-ui-shape>`. Needs a `ThemeProvider` (`useTheme` throws without one); without an `AppearanceProvider` the three other rows are read-only defaults. Every string is overridable via `labels` (German defaults). Language and app-specific switches stay in the app |
 | `ContentPanel` / `PanelSection` | `content-panel.tsx` | **0.42.0.** A panel that replaces a content area (header + close, scrolling body capped at 880px, pinned footer) and its titled, rule-divided sections |
 | `CodeBlock` | `code-block.tsx` | fixed-dark code viewer (identical in both themes, `code-surface` tokens) with built-in copy button (clipboard write + Copy→Check confirmation for ~2 s) |
 | `Input` (+ shared `fieldVariants`) | `input.tsx` / `field-variants.ts` | honors `aria-invalid` styling; `variant`: default (framed) / inline (borderless in-flow field for in-row editing) |
