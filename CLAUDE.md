@@ -2,18 +2,20 @@
 
 ## Dev harness
 
-This repo runs an agent-loop port: **the main session is the project manager** — it plans, keeps
-the kanban board honest, and delegates carded implementation to subagents in temporary worktrees.
-See `.claude/README.md` (architecture, guard, deviations from upstream) and
-`.claude/skills/project-manager/` (the pipeline and the PM loop).
+This repo runs an agent-loop port: **the main session is the project manager**. Quick edits it
+makes itself, batched on a `dev/<topic>` branch and reviewed once by Codex (`/codex:review`, plugin
+`openai/codex-plugin-cc`) when the batch ships. Board cards it delegates to subagents in temporary
+worktrees, with an independent `code-reviewer`. See `.claude/README.md` (architecture, guard, deviations from upstream) and
+`.claude/skills/project-manager/` (both lanes and the PM loop).
 
 ## Parallel work runs in a temporary worktree — always
 
 Any work that runs alongside other activity in this repo — subagent workers, parallel tasks,
 background jobs — happens in a **temporary git worktree** (Agent tool `isolation: "worktree"`,
 or `git worktree add`), never in the main working tree. The main checkout belongs to the
-interactive session (the PM): it stays on `main`, clean, and available at all times. A worker
-must be told it is in a worktree and must not cd into or modify the main checkout.
+interactive session (the PM). It is on `main` and clean, except while a quick-edit batch is open
+on a `dev/<topic>` branch. That batch is the interactive session's own work, not parallel work. A
+worker must be told it is in a worktree and must not cd into or modify the main checkout.
 
 ## Commit messages
 

@@ -63,7 +63,11 @@ Cards on this board are written in **English** (titles and descriptions).
 ## The core rule: `In Progress` must mirror reality
 
 **Whenever you are actively working a milestone, exactly that card must be in `In Progress`.**
-Concretely, on every substantive task:
+This applies to **carded work** (the pipeline lane). A quick-edit batch (see the `project-manager`
+skill) needs no card: its record is the PR. If a batch completes an existing card, move that card
+to `Done` with the PR record once the batch merges.
+
+Concretely, on every carded task:
 
 1. **Before starting work** — make sure a card exists for it (create one if not) and move it to
    `In Progress` (`update_card` with the `In Progress` list publicId, `index: 0`). If a card
