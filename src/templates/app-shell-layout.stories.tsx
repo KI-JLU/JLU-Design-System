@@ -7,12 +7,7 @@ import { Button } from "../components/button";
 import { ChatStage } from "../components/chat-stage";
 import { Logo } from "../components/logo";
 import { SIDE_PANEL_RAIL_WIDTH } from "../components/side-panel-variants";
-import {
-  AppShellFixture,
-  OverviewNavRows,
-  ShellSearch,
-  WORKSPACE_TITLE,
-} from "../test/fixtures/app-shell";
+import { AppShellFixture, ShellSearch, WORKSPACE_TITLE } from "../test/fixtures/app-shell";
 import * as chatStageStories from "../components/chat-stage.stories";
 import * as dashboardStories from "./dashboard-layout.stories";
 import * as formStories from "./form-layout.stories";
@@ -781,17 +776,19 @@ export const WithCollapsibleColumns: Story = {
  * die ausgeklappte Spalte ist die, an der sich die eingeklappte auszurichten
  * hat, und beide Messungen kommen aus demselben Browser-Layout.
  *
- * **The nav is the bare rows here (`OverviewNavRows`), not the overview
- * context's `SidebarPanel` frame** — the rail mirrors `AppShellLayout`'s own
- * `p-4` nav wrapper, and that is the mechanism this story pins. With the
- * panel frame (JLURAG's `SidebarNav`, the fixture's default) the first row
- * sits 92px below the column's top expanded and 80px in the rail, measured in
- * Chromium on KI-847.
- * TODO: that 12px jump is a finding, not yet decided — package or consumer.
+ * **The expanded nav is the overview context's `SidebarPanel` frame** — the
+ * composition JLURAG's `SidebarNav.tsx` renders: a `SidebarPanel` with no
+ * title, `head` or `nav` around the rows, bare rows in the rail. The story
+ * asserts that frame before it measures, so it cannot silently fall back to
+ * bare rows. Until KI-852 this composition jumped: the panel rendered an
+ * empty 28px head (`pt-4 pb-3`) and the first row sat 92px below the
+ * column's top expanded, 80px in the rail. Now a head-less panel renders no
+ * head and its list carries the 16px top inset (`pt-4`) the rail's
+ * `py-stack-md` mirrors.
  */
 export const CollapsedRailKeepsVerticalPositions: Story = {
   render: () => (
-    <AppShellFixture context="overview" nav={<OverviewNavRows />} search={<ShellSearch />}>
+    <AppShellFixture context="overview" search={<ShellSearch />}>
       <SectionedGridPage />
     </AppShellFixture>
   ),
@@ -813,7 +810,10 @@ export const CollapsedRailKeepsVerticalPositions: Story = {
 
     const toggleOpen = await canvas.findByRole("button", { name: "Navigation einklappen" });
     const openToggleCentre = centreY(toggleOpen);
-    const openNavTop = offsetTop(await canvas.findByRole("button", { name: "Meine Sammlungen" }));
+    const openRow = await canvas.findByRole("button", { name: "Meine Sammlungen" });
+    // The composition under test: the rows sit in a `SidebarPanel` frame.
+    await expect(openRow.closest('[data-slot="sidebar-panel"]')).not.toBeNull();
+    const openNavTop = offsetTop(openRow);
     const openFootBottom = offsetBottom(
       await canvas.findByRole("button", { name: /Jamie Lee/ }),
     );

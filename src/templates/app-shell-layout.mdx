@@ -240,11 +240,13 @@ const [leftOpen, setLeftOpen] = useState(true);   // or URL, context, localStora
 
 <Canvas of={AppShellLayoutStories.CollapsedRailKeepsVerticalPositions} />
 
-  That holds for `AppShellLayout`'s own `p-4` nav wrapper, which is what the
-  story measures. **Known gap** (found on KI-847, not yet decided): with the
-  overview context's `SidebarPanel` frame around the rows, the panel's empty
-  head puts the first row 92px below the column's top when expanded and 80px
-  in the rail — a 12px jump on collapse, measured in Chromium.
+  The story measures the overview context's composition: the rows in a
+  `SidebarPanel` with no title, `head` or `nav` when expanded, bare in the
+  rail. Such a panel renders no head, and its list carries the same 16px top
+  inset as `AppShellLayout`'s own `p-4` nav wrapper and the rail — so bare
+  rows and a head-less panel both start 16px below the chrome row. Until
+  KI-852 the panel rendered an empty 28px head, and the first row jumped 12px
+  on collapse (92px below the column's top expanded, 80px in the rail).
 - **Both label props are translatable** — the defaults are German.
 
 ## Second column on the right (since 0.30.0)

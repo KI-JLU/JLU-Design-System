@@ -185,7 +185,7 @@ consuming repo** — new exceptions get the same scrutiny there.
 | `SidebarCard` (+ `SidebarCardList`, `SidebarSelectionBar`) | `sidebar-card.tsx` | **0.42.0.** Side-panel row card: icon tile (glyph, emoji or type label), one-line title, meta lines, extra controls, checkbox, actions menu; whole-card click; selection mode for batch actions. Pill shape tightens padding and falls back to `rounded-2xl` with meta lines |
 | `SidebarRail` / `SidebarRailItem` | `sidebar-rail.tsx` | **0.42.0.** The collapsed 60px rail's entries: tinted tile, primary on hover/active, `muted`, `iconText`, `variant="action"` for the leading button; wrap in Tooltip/HoverCard for the full title |
 | `SidebarScrollArea` / `useScrollbarGutter` / `useScrollFade` | `sidebar-scroll-area.tsx` / `lib/use-scrollbar-gutter.ts` / `lib/use-scroll-fade.ts` | **0.43.0.** A side panel's scrolling list: content fades out (24px mask) at an edge with more to scroll instead of a hard crop; the scrollbar is moved into the right gutter (padding = gutter − measured bar width, 0 for overlay bars), so cards keep the width of the controls above whether a bar shows or not. The hook works on any scroller (e.g. a `SidebarCardList` that scrolls itself) |
-| `SidebarPanel` | `sidebar-panel.tsx` | **0.43.0.** One frame for both side columns: fixed head (title row + `head`) and the list that alone scrolls (`SidebarScrollArea`). `AppShellLayout` drops its nav padding around it, so left and right columns share insets and heading baseline by construction |
+| `SidebarPanel` | `sidebar-panel.tsx` | **0.43.0.** One frame for both side columns: fixed head (title row + `head`, then optional `nav` rows) and the list that alone scrolls (`SidebarScrollArea`). `AppShellLayout` drops its nav padding around it, so left and right columns share insets and heading baseline by construction. **Unreleased (KI-852) — set the version at release:** with no `title`, `head` or `nav` it renders no head, and the list carries the 16px top inset (`pt-4`) itself, so a nav-only column's first row sits on the collapsed rail's line (80px below the column's top, where it was 92px). A panel with any of the three renders exactly as before |
 | `SidebarAction` | `sidebar-action.tsx` | **0.43.0.** A side panel's primary action row ("Neuer Chat"): full width, label left-aligned, icon in a 28px slot on the same axis as the SidebarCards' tiles (`sidebarRowInsetX`); 44px, radius follows the Style |
 | `ActionMenu` | `action-menu.tsx` | **0.43.0.** The ⋮ overflow menu of a card or list row (`actions: ActionMenuItem[]`, `label`); SidebarCard's menu and the app's topic cards. A clickable host ignores clicks from `[role=menu]`/`[role=menuitem]` and buttons |
 | `categoryColor` | `lib/category-color.ts` | **0.44.0.** Stable colour for a category key: `var(--color-category-1..9)` (tokens.css palette). Pass it as `FilterChipsOption.color` — leading dot, active chip tinted in it |
@@ -496,6 +496,26 @@ consumer. Not done yet because it needs an account action nobody has taken:
 Until then the git path carries us; keep the README's git section first.
 
 ### Changelog
+- **Unreleased (KI-852) — set the version at release.** **Fix: a head-less
+  `SidebarPanel` no longer shifts its rows 12px on collapse.** A panel with no
+  `title`, `head` or `nav` (JLURAG's `SidebarNav`: the nav rows in a bare
+  `SidebarPanel`) still rendered its head box, empty, with the head's
+  `pt-4 pb-3`: 28px. Expanded, its first row sat 92px below the column's top;
+  in the rail, which starts its strip at `py-stack-md` (16px), at 80px.
+  Measured in Chromium. The panel now renders no head in that case, and the
+  list carries the 16px top inset (`pt-4`) instead, so the row sits at 80px
+  in both states. Dropping the head alone would have put it at 64px: of the
+  head's 28px, the `pb-3` was the 12px jump and the `pt-4` was the inset the
+  rail mirrors.
+
+  *What moves.* Only a panel without `title`, `head` and `nav`: its content
+  starts 12px higher (28px → 16px below the panel's top). A panel with any of
+  the three renders the same DOM and classes as before. `head` counts as
+  passed unless React renders it as nothing (`null`, `undefined`, a boolean,
+  `""`). Additive, no API change. `Templates/AppShellLayout →
+  CollapsedRailKeepsVerticalPositions` measures the `SidebarPanel` frame
+  again, where KI-847 had to fall back to bare rows.
+
 - **Unreleased (KI-846) — set the version at release.** **BREAKING:
   `ThemeToggle`, `UiShapeToggle`, the legacy `Sidebar` and `WorkspaceLayout`
   are removed.** Closes KI-801 (the collapsed `ThemeToggle`), which is moot

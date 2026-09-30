@@ -112,7 +112,7 @@ const OVERVIEW_TABS: MobilePaneTab[] = [
  * text in a `<span>`: the first permits the icon-only form in the rail, the
  * second is what the collapsed variant hides.
  */
-export function OverviewNavRows() {
+function OverviewNavRows() {
   return (
     <>
       <NavItem type="button" label="Meine Sammlungen" active>
@@ -138,14 +138,9 @@ export function OverviewNavRows() {
 /**
  * The overview's `nav`: the rows in the column's `SidebarPanel` frame, and
  * bare in the 60px rail, where the panel's insets do not fit — JLURAG's
- * `SidebarNav.tsx`, one to one.
- *
- * TODO: this composition does NOT keep the rows' height across a collapse —
- * the panel's empty head (`pt-4 pb-3`) puts the first row 92px below the
- * column's top when expanded, the rail puts it at 80px (measured in Chromium,
- * KI-847). `CollapsedRailKeepsVerticalPositions` therefore measures the bare
- * rows (`OverviewNavRows`), the composition the rail mirrors. Whether the
- * package or the consumer closes the 12px is not yet decided.
+ * `SidebarNav.tsx`, one to one. The panel has no title, `head` or `nav`, so
+ * it renders no head and its list starts on the rail's 16px inset (KI-852):
+ * `CollapsedRailKeepsVerticalPositions` measures exactly this composition.
  */
 function OverviewNav() {
   const collapsed = useSidebarCollapsed();
