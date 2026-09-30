@@ -192,22 +192,6 @@ export const LegalPage: Story = {
 };
 
 /**
- * Derselbe Rechtstext im dunklen Theme — die Prop darf am Farbschema nichts
- * ändern, und beide Themes gehören zur Sichtprüfung.
- */
-export const LegalPageDark: Story = {
-  ...LegalPage,
-  globals: { theme: "dark" },
-  play: async ({ canvasElement }) => {
-    // Belegt zuerst, dass die Story wirklich im dunklen Theme läuft
-    // (`ThemeProvider` ist der einzige Schreiber von `<html data-theme>`) —
-    // sonst würde eine grüne Messung ein Theme behaupten, das nie aktiv war.
-    await expect(document.documentElement.dataset.theme).toBe("dark");
-    await expect(getComputedStyle(readColumn(canvasElement)).maxWidth).toBe("672px");
-  },
-};
-
-/**
  * Derselbe Rechtstext in der Standardbreite — **der abgelehnte Zustand**,
  * absichtlich als Story erhalten, damit die beiden Breiten nebeneinander
  * beurteilbar sind. Pinnt gleichzeitig die Standardbreite auf 448px, damit
@@ -229,27 +213,6 @@ export const LegalPageAtDefaultWidth: Story = {
   },
 };
 
-/** Die Standardbreite im dunklen Theme — das SSO-Beispiel als Inhalt. */
-export const DefaultWidthDark: Story = {
-  args: {
-    title: "Anmelden",
-    description: "Mit Ihrem JLU-Account über Single Sign-on.",
-  },
-  globals: { theme: "dark" },
-  render: (args) => (
-    <AuthLayout {...args} logo={brand} data-testid="auth-root">
-      <Button className="w-full">
-        <KeyRound width="1em" height="1em" aria-hidden />
-        Mit JLU-Account anmelden
-      </Button>
-    </AuthLayout>
-  ),
-  play: async ({ canvasElement }) => {
-    await expect(document.documentElement.dataset.theme).toBe("dark");
-    await expect(getComputedStyle(readColumn(canvasElement)).maxWidth).toBe("448px");
-  },
-};
-
 /**
  * **`headingLevel` — der Titel als echte Überschrift.** Ohne die Prop landet
  * `title` in `CardTitle` und ist damit *keine* Überschrift: die Seite hat
@@ -261,21 +224,14 @@ export const DefaultWidthDark: Story = {
  * Mit `headingLevel={1}` übernimmt das Template die Überschrift (über
  * `CardTitle asChild`, die Typografie bleibt also dieselbe), und der Aufrufer
  * gibt nur noch Text.
+ *
+ * This is `SSO` with one more arg, so it reuses that story's body. It stays
+ * a separate story because `SSO` has to keep showing the default (no
+ * heading), and this `play` function pins the `headingLevel` case.
  */
 export const TitleAsHeading: Story = {
-  args: {
-    title: "Anmelden",
-    headingLevel: 1,
-    description: "Mit Ihrem JLU-Account über Single Sign-on.",
-  },
-  render: (args) => (
-    <AuthLayout {...args} logo={brand}>
-      <Button className="w-full">
-        <KeyRound width="1em" height="1em" aria-hidden />
-        Mit JLU-Account anmelden
-      </Button>
-    </AuthLayout>
-  ),
+  ...SSO,
+  args: { ...SSO.args, headingLevel: 1 },
   play: async ({ canvasElement }) => {
     const heading = canvasElement.querySelector("h1");
     await expect(heading).not.toBeNull();

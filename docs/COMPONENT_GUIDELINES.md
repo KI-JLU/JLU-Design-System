@@ -427,15 +427,8 @@ import { AppShellLayout, DashboardLayout, Grid, Stack } from "@ki4jlu/design-sys
   `Sidebar` was removed in KI-846; there is no nav column outside the
   shell any more.)
 - **`AppShellLayout` brings the chrome; every other app-page template is its
-  child.** `SectionedGridLayout`, `DashboardLayout`, `FormLayout`,
-  `TableLayout` and `ChatLayout` are page content, hung in as `children`, and
-  keep their own `<section aria-label>` inside the shell's single `<main>`.
-  The dividing question for a new template is whether it brings the chrome or
-  fills a slot — not how big it is. Until KI-846 `WorkspaceLayout` was the
-  one standalone, chrome-owning exception; since 0.37.0 it was only an
-  `AppShell` without a bar, and it was removed in favour of
-  `AppShellLayout` with a `rightPanel`. (`AuthLayout` stays outside the
-  shell: sign-in pages carry no app chrome.)
+  child** (`AuthLayout` excepted). The rule, and why it is not about size:
+  [DESIGN_SYSTEM.md §4 → „Page templates"](./DESIGN_SYSTEM.md#page-templates-srctemplates).
 - **Overview pages of grouped card collections** are `SectionedGridLayout`:
   pass `sections` (each with `isOpen`/`onOpenChange` as controlled props) and
   hang the template into `AppShellLayout` as `children`. Per section the body

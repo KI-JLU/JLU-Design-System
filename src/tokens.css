@@ -258,30 +258,26 @@
   --max-width-container-content: 1000px;
   --max-width-container-reading: 42rem;
 
-  /* Sidebar-Breiten — die Navigationsspalte in ihren beiden Zuständen.
-   * Referenziert als `w-(--width-sidebar)` bzw. `w-(--width-sidebar-collapsed)`,
-   * aus demselben Grund wie bei den Container-Breiten (Begründung ausführlich
-   * in `container-variants.ts`): tailwind-merge kennt einen eigenen Theme-Key
-   * nicht als `w`-Konflikt, die Arbitrary-Variable-Form dagegen schon — eine
-   * Breitenklasse am Aufrufort gewinnt damit weiterhin.
+  /* Sidebar widths: the navigation column expanded and collapsed. No utility
+   * in this library references either token. `AppShell` takes a column width
+   * as a px number, and its default of 256 is `--width-sidebar` at the 16px
+   * root; stories and tests read the token back as their oracle. A consumer
+   * writes them as `w-(--width-sidebar)` / `w-(--width-sidebar-collapsed)`,
+   * not as a theme key, for the reason given for the container widths
+   * (`container-variants.ts`): tailwind-merge does not see a custom theme key
+   * as a `w` conflict, so a width class at the call site would lose to CSS
+   * source order.
    *
-   * `16rem` ist exakt der Wert, den das bisherige `w-64` aufgelöst hat
-   * (Tailwind-Spacing 64 × 0.25rem). Die Umstellung auf das Token ändert die
-   * ausgeklappte Breite also nicht — auch nicht bei abweichender
-   * Wurzelschriftgröße, und deshalb rem statt px: die Spalte ist bisher mit
-   * der Schriftgröße mitgewachsen.
+   * `16rem` is what `w-64` resolved to (64 × 0.25rem), in rem so the column
+   * grows with the root font size.
    *
-   * `5rem` (80px bei 16px-Wurzel) ist die eingeklappte Breite. Hergeleitet,
-   * nicht gewählt: die <nav>-Spalte behält eingeklappt `px-2` (2 × 8px), eine
-   * NavItem-Zeile bringt ihre eigenen `px-4` (2 × 16px) aus `navItemVariants`
-   * mit — 80 − 16 − 32 = 32px freie Fläche, in der ein 16px- (1em) wie ein
-   * 20px-Icon (h-5) zentriert Platz hat.
-   *
-   * Bewusst NICHT `SIDE_PANEL_RAIL_WIDTH` (60px): dort steht ein einzelner
-   * Icon-Button ohne Zeilen-Innenabstand, hier eine vollbreite Zeile. Ein
-   * gemeinsames „Chrome-Maß" über AppShell/SidePanel/BottomTabBar/Sidebar wäre
-   * das aufgeräumtere System — siehe das TODO in `side-panel-variants.ts`;
-   * das ist eine Eigentümer-Entscheidung und hier nicht getroffen.
+   * `5rem` (80px at a 16px root) was the collapsed icon column of the legacy
+   * `Sidebar`: its `px-2` column padding plus a NavItem row's own `px-4`
+   * leave 32px, enough to centre a 16px or 20px icon. It is not
+   * `SIDE_PANEL_RAIL_WIDTH` (60px), the rail every column collapses to today.
+   * One shared chrome unit across AppShell, SidePanel and BottomTabBar would
+   * be the tidier system (see the TODO in `side-panel-variants.ts`); that is
+   * an owner decision, not taken here.
    *
    * TODO(KI-846): `--width-sidebar-collapsed` has had no consumer in this
    * library since the legacy `Sidebar` was removed. It stays because tokens

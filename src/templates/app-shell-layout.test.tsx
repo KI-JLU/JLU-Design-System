@@ -204,8 +204,8 @@ describe("AppShellLayout — the optional pageLabel (0.29.0)", () => {
 
 /**
  * The centre region (0.30.0). What it *contains* is checkable here; that it is
- * centred **on the bar** is a layout fact and is measured in Chromium by
- * `WithCenteredSearch` / `WithCenteredSearchAndLabel`.
+ * centred **on the bar** is a layout fact and is measured in Chromium by the
+ * stories `WithCenteredSearch` (with a label) and `Overview` (without one).
  */
 describe("AppShellLayout — the centred search slot (0.30.0)", () => {
   it("holds the node it is given, reachable by its accessible name", () => {

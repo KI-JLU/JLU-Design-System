@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
-import { FileText, LayoutDashboard, MessageSquare, Search, Settings } from "lucide-react";
+import { FileText, MessageSquare, Search } from "lucide-react";
 import {
   Combobox,
   ComboboxContent,
@@ -14,9 +14,7 @@ import {
   ComboboxSeparator,
 } from "./combobox";
 import { Button } from "./button";
-import { Logo } from "./logo";
-import { NavItem } from "./nav-item";
-import { AppShellLayout } from "../templates/app-shell-layout";
+import { AppShellFixture } from "../test/fixtures/app-shell";
 
 /*
  * Oracle for every play function below: the DOM as the browser and assistive
@@ -398,45 +396,24 @@ export const ServerGroupedAsync: Story = {
 /* In the AppShellLayout search slot                                        */
 /* ------------------------------------------------------------------------ */
 
-const nav = (
-  <>
-    <NavItem label="Übersicht" active>
-      <LayoutDashboard width="1em" height="1em" aria-hidden />
-      <span>Übersicht</span>
-    </NavItem>
-    <NavItem label="Einstellungen">
-      <Settings width="1em" height="1em" aria-hidden />
-      <span>Einstellungen</span>
-    </NavItem>
-  </>
-);
-
 /**
  * The real consumer placement: server search in `AppShellLayout`'s `search`
  * slot. The bar stays **64px** open or closed (JustRAG's `Toast.css`
  * `top: 76px` = 64 + 12 depends on it), the list is portalled so the bar
  * cannot clip it, and focus stays in the field while ↓ moves the highlight.
+ *
+ * The shell is the shared story fixture's `overview` context
+ * (`src/test/fixtures/app-shell.tsx`, the shell of every
+ * `Templates/AppShellLayout` story) with `ServerSearch` in its `search` slot.
+ * JustRAG's global search sits in that context, and this file builds no shell
+ * of its own.
  */
 export const InAppShellSearch: Story = {
   parameters: { layout: "fullscreen" },
   render: () => (
-    <AppShellLayout
-      logo={<Logo product="RAG" size="sm" />}
-      nav={nav}
-      leftOpen
-      onLeftOpenChange={() => {}}
-      pageLabel="Übersicht"
-      search={<ServerSearch />}
-      mobileTabs={[
-        { id: "nav", icon: <LayoutDashboard />, label: "Bereiche", pane: "left" },
-        { id: "page", icon: <FileText />, label: "Seite", pane: "main" },
-      ]}
-      activeMobileTab="page"
-      onMobileTabChange={() => {}}
-      mobileTabBarLabel="Bereichswechsel"
-    >
+    <AppShellFixture context="overview" search={<ServerSearch />}>
       <div className="p-gutter text-on-surface-variant">Seiteninhalt</div>
-    </AppShellLayout>
+    </AppShellFixture>
   ),
   play: async ({ canvas, canvasElement, userEvent }) => {
     const body = page(canvasElement);

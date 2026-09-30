@@ -11,9 +11,10 @@ Karten-Grid**. Optional eine Titelzeile (`PageHeader`) darüber, dann pro Gruppe
 eine Kopfzeile (Titel, Icon, Anzahl, Aktion) und ein Körper — entweder ein
 `Grid` aus Zellen, eine Leerzustands-Zeile oder ein freiformiger Knoten.
 
-Das Template ist **Seiteninhalt**, kein Seitengerüst: es wird als `children` in
-`AppShellLayout` gehängt, genau wie `DashboardLayout`. Marke, Seitenlabel,
-Theme-Umschalter und Nutzermenü gehören dem Shell.
+This template is **page content**. It goes into `AppShellLayout` as
+`children`, and the shell owns the brand, the page label and the user menu.
+Why content templates and the shell are two kinds: `docs/DESIGN_SYSTEM.md`
+§4 → "Page templates".
 
 <Canvas of={SectionedGridLayoutStories.Standard} />
 
@@ -111,12 +112,9 @@ Viewport-Kenntnis, und es gibt hier keinen zweiten Breakpoint.
 ## Zugänglichkeit
 
 - Ein Landmark: `region`, benannt über `label`.
-- **Kein zweites `<main>`.** Das Template steckt in `AppShellLayout`, dessen
-  `children` schon in einem `<main>` liegen — die eigene Region ist ein
-  `<section aria-label>`. **Anders als `AppShellLayout`:** das ist die ganze
-  Seite (es bringt seine Chrome selbst mit und rendert deshalb ein eigenes
-  `<main>`), dieses Template hier ist Seiten-*Inhalt* und füllt einen Slot der
-  Shell.
+- **No second `<main>`.** The shell's `<main>` already holds this template,
+  so its own region is a `<section aria-label>` (the rule:
+  `docs/DESIGN_SYSTEM.md` §4 → "Page templates").
 - Überschriften-Ordnung: eine Zahl, zwei Stufen. `headingLevel` (Standard `1`)
   ist die Stufe des Seitentitels, die Sektionen liegen eine Stufe darunter —
   standardmäßig also genau eine `h1` (aus `PageHeader`) und pro Sektion eine
@@ -137,10 +135,8 @@ Viewport-Kenntnis, und es gibt hier keinen zweiten Breakpoint.
 The intended use — as `children` of `AppShellLayout` — is shown on the shell's
 own page, not here: `Templates/AppShellLayout` → **Overview** hangs this
 template's `Standard` story into the shared overview shell (brand, nav, user
-menu, central search). Until KI-847 this page had its own `InAppShell` story;
-it was a second hand-built shell with different menu content and no tabs for
-the narrow arrangement (`mobileTabs={[]}` left the nav unreachable below
-`lg`), so it was removed rather than kept in sync.
+menu, central search). This page deliberately has no shell story of its own:
+there is one shell fixture, so there is one shell to keep in sync.
 
 <Canvas of={AppShellLayoutStories.Overview} />
 

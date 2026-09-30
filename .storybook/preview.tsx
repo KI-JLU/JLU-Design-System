@@ -135,6 +135,24 @@ const preview: Preview = {
   },
   decorators: [withTheme],
   parameters: {
+    // Sidebar order. Without it Storybook keeps the index in import order,
+    // which put `Layout/BottomTabBar` first and the landing page `Einführung`
+    // third. Keep it a plain object literal: Storybook reads `storySort`
+    // statically when it builds the index.
+    options: {
+      storySort: {
+        order: [
+          "Einführung",
+          "Theming",
+          "Tokens",
+          "Foundations",
+          "Templates",
+          "Layout",
+          "Components",
+          "*",
+        ],
+      },
+    },
     controls: {
       matchers: {
         color: /(background|color)$/i,
