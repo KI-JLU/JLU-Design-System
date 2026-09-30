@@ -1,11 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState, type ReactNode } from "react";
 import { expect, waitFor, within } from "storybook/test";
-import { ExternalLink, LogOut, Palette, Settings, User } from "lucide-react";
+import { ExternalLink, LogOut, Settings } from "lucide-react";
 import { SidebarUserMenu } from "./sidebar-user-menu";
 import { DropdownMenuItem, DropdownMenuSeparator } from "./dropdown-menu";
-import { SettingsDialog, SettingsRow } from "./settings-dialog";
-import { AppearanceSettings } from "./appearance-settings";
+import { UserMenuWithSettings } from "../test/fixtures/user-menu";
 
 const meta = {
   title: "Components/SidebarUserMenu",
@@ -77,58 +75,24 @@ export const TruncatesLongValues: Story = {
   },
 };
 
+const page = (canvasElement: HTMLElement) => within(canvasElement.ownerDocument.body);
+
 /**
  * Der Weg zu den Einstellungen: „Einstellungen" im Nutzermenü öffnet per
  * `onSelect` den `SettingsDialog`, dessen Abschnitt „Darstellung" die
  * `AppearanceSettings` trägt — verdrahtet mit den echten Providern, die der
  * Storybook-Decorator mountet. Eine Wahl im Dialog stellt also die ganze
  * Canvas um (die nächste Änderung in der Toolbar gewinnt wieder).
+ *
+ * Die Verdrahtung ist die gemeinsame Story-Fixture `UserMenuWithSettings`
+ * (`src/test/fixtures/user-menu.tsx`) — dieselbe, die jede
+ * `Templates/AppShellLayout`-Story im Spaltenfuß mountet (KI-847).
  */
-function SettingsFlow({ initials, name, role }: { initials: string; name: ReactNode; role?: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <SidebarUserMenu initials={initials} name={name} role={role}>
-        <DropdownMenuItem onSelect={() => setOpen(true)}>
-          <Settings width="1em" height="1em" aria-hidden />
-          Einstellungen
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive">
-          <LogOut width="1em" height="1em" aria-hidden />
-          Abmelden
-        </DropdownMenuItem>
-      </SidebarUserMenu>
-      <SettingsDialog
-        open={open}
-        onOpenChange={setOpen}
-        sections={[
-          {
-            value: "appearance",
-            label: "Darstellung",
-            icon: <Palette aria-hidden="true" />,
-            keywords: ["Farbschema", "Kontrast", "Akzentfarbe", "Stil"],
-            content: <AppearanceSettings />,
-          },
-          {
-            value: "profile",
-            label: "Profil",
-            icon: <User aria-hidden="true" />,
-            content: (
-              <SettingsRow label="Benutzername" control={<span className="text-on-surface-variant">@jlee</span>} />
-            ),
-          },
-        ]}
-      />
-    </>
-  );
-}
-
-const page = (canvasElement: HTMLElement) => within(canvasElement.ownerDocument.body);
-
 export const OpensSettings: Story = {
   args: { children: null },
-  render: (args) => <SettingsFlow initials={args.initials} name={args.name} role={args.role} />,
+  render: (args) => (
+    <UserMenuWithSettings initials={args.initials} name={args.name} role={args.role} />
+  ),
   play: async ({ canvas, canvasElement, userEvent }) => {
     const body = page(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /Jamie Lee/ }));

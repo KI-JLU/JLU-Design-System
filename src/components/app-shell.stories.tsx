@@ -78,17 +78,9 @@ const collapsedPreview = (
  * Der Zustand beider Spalten liegt — wie in einer App — außerhalb der Shell.
  * Hier ist es lokaler Story-State statt eines Contexts oder `localStorage`.
  */
-function Interactive({
-  leftOpenInitially = true,
-  rightOpenInitially = true,
-  withRight = true,
-}: {
-  leftOpenInitially?: boolean;
-  rightOpenInitially?: boolean;
-  withRight?: boolean;
-}) {
-  const [leftOpen, setLeftOpen] = useState(leftOpenInitially);
-  const [rightOpen, setRightOpen] = useState(rightOpenInitially);
+function Frame() {
+  const [leftOpen, setLeftOpen] = useState(true);
+  const [rightOpen, setRightOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("page");
 
   const left: AppShellPanel = {
@@ -123,7 +115,7 @@ function Interactive({
   return (
     <AppShell
       left={left}
-      right={withRight ? right : undefined}
+      right={right}
       topBar={
         <Container className="flex items-center gap-4">
           <p className="m-0 font-headline-md text-headline-md font-bold text-on-surface">
@@ -145,18 +137,29 @@ function Interactive({
 }
 
 /**
- * Die Skizze: `SidePanel` links | Hauptspalte | `SidePanel` rechts. Beide
- * Spalten klappen unabhängig voneinander auf die 60px-Schiene ein; die
- * Kopfzeile der linken Spalte, die Chrome-Zeile der Hauptspalte und die
- * Kopfzeile der rechten Spalte sind je 64px hoch und liegen auf einer Linie.
+ * **The one reference story of the primitive** (KI-847): the frame with no
+ * template around it — `SidePanel` left | main column with a free-form
+ * `topBar` | `SidePanel` right. It is here to show what `AppShell` itself
+ * owns; every page context, and every mechanism regression of the full app
+ * chrome, is a story of `Templates/AppShellLayout`, which composes this frame
+ * (an app uses that template and never builds the frame by hand).
  *
- * Unter `lg` zeigt dieselbe Shell **einen** Bereich plus die `BottomTabBar` —
- * sichtbar, indem man das Fenster schmaler als 1024px zieht (oder in der Story
- * `Mobile`).
+ * Both columns collapse to the 60px rail independently; the left column's
+ * header row, the main column's bar and the right column's header row are
+ * each 64px high and on one line. Below `lg` the same shell shows **one**
+ * area plus the `BottomTabBar` — visible by making the window narrower than
+ * 1024px; the narrow arrangement is asserted in `app-shell.test.tsx` (jsdom,
+ * stubbed viewport), because the Storybook runner renders at 1280px.
+ *
+ * Until KI-847 this file held four stories. `ThreeColumns` and
+ * `ColumnsCollapsed` are the two halves of this story's `play`;
+ * `WithoutRightColumn` is `app-shell.test.tsx` → „renders no right column and
+ * no rail when `right` is omitted"; `Mobile` was a visual control without
+ * assertions — `Templates/AppShellLayout` → `Mobile` is that control now.
  */
-export const ThreeColumns: Story = {
-  render: () => <Interactive />,
-  play: async ({ canvas, canvasElement }) => {
+export const Reference: Story = {
+  render: () => <Frame />,
+  play: async ({ canvas, canvasElement, userEvent }) => {
     // Orakel: die Layout-Boxen, die Chromiums Engine liefert — keine
     // Klassennamen. Reihenfolge und Nebeneinander sind die Behauptung der
     // Skizze; in jsdom (0×0-Boxen) wäre dieselbe Prüfung wertlos.
@@ -183,18 +186,14 @@ export const ThreeColumns: Story = {
     await expect(bar.getBoundingClientRect().height).toBe(64);
     await expect(Math.round(bar.getBoundingClientRect().top)).toBe(Math.round(l.top));
     await expect(Math.round(r.top)).toBe(Math.round(l.top));
-  },
-};
 
-/**
- * Beide Spalten eingeklappt: zwei 60px-Schienen (`SIDE_PANEL_RAIL_WIDTH`), die
- * linke mit `collapsedPreview`-Icons, und eine entsprechend breitere
- * Hauptspalte. **Die eingeklappte Form ist die Schiene** — es gibt keinen
- * Icon-Navigationsmodus mehr (Entscheidung des Entwicklers, 17.09.2026).
- */
-export const ColumnsCollapsed: Story = {
-  render: () => <Interactive leftOpenInitially={false} rightOpenInitially={false} />,
-  play: async ({ canvas }) => {
+    // Beide Spalten eingeklappt: zwei 60px-Schienen (`SIDE_PANEL_RAIL_WIDTH`),
+    // die linke mit `collapsedPreview`-Icons. **Die eingeklappte Form ist die
+    // Schiene** — es gibt keinen Icon-Navigationsmodus mehr (Entscheidung des
+    // Entwicklers, 17.09.2026). Bis KI-847 die Story `ColumnsCollapsed`, die
+    // eingeklappt startete; hier über die beiden Schalter erreicht.
+    await userEvent.click(await canvas.findByRole("button", { name: "Navigation einklappen" }));
+    await userEvent.click(await canvas.findByRole("button", { name: "Quellen einklappen" }));
     // Orakel: die exportierte Designkonstante — kein literales 60 hier.
     for (const name of ["Hauptnavigation", "Quellen"]) {
       const column = await canvas.findByRole("complementary", { name });
@@ -206,40 +205,4 @@ export const ColumnsCollapsed: Story = {
     ).toBeVisible();
     await expect(canvas.queryByRole("navigation", { name: "Hauptnavigation" })).toBeNull();
   },
-};
-
-/**
- * Jede Spalte einzeln: `right` weggelassen heißt **keine** rechte Spalte und
- * **keine** Schiene — nicht etwa eine eingeklappte.
- */
-export const WithoutRightColumn: Story = {
-  render: () => <Interactive withRight={false} />,
-  play: async ({ canvas }) => {
-    await expect(canvas.queryByRole("complementary", { name: "Quellen" })).toBeNull();
-    await expect(canvas.queryByRole("button", { name: "Quellen ausklappen" })).toBeNull();
-  },
-};
-
-/**
- * Die Anordnung unter `lg`: Top-Bar (Marke), **ein** Bereich, `BottomTabBar` —
- * kein Burger-Button, kein Drawer, kein Dialog. Welcher Bereich zu sehen ist,
- * entscheidet der aktive Reiter; die Zuordnung Reiter → Bereich ist Daten der
- * App (`mobileTabs`).
- *
- * **Ohne `play`-Assertions, mit Absicht.** Die Anordnung hängt am echten
- * Viewport (`matchMedia`), und der Storybook-Vitest-Lauf rendert Stories in
- * einem 1280px-Fenster, nicht im hier eingestellten Story-Viewport. Die
- * schmale Anordnung ist deshalb in `app-shell.test.tsx` (jsdom, gestubbter
- * Viewport) geprüft; diese Story ist die visuelle Kontrolle im Browser.
- */
-export const Mobile: Story = {
-  parameters: {
-    viewport: {
-      options: {
-        phone: { name: "Phone", styles: { width: "390px", height: "844px" } },
-      },
-    },
-  },
-  globals: { viewport: { value: "phone" } },
-  render: () => <Interactive />,
 };

@@ -1,129 +1,93 @@
-import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { composeStories } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
-import {
-  ArrowLeft,
-  FileText,
-  Home,
-  LayoutDashboard,
-  LogOut,
-  Search,
-  Settings,
-  Users,
-} from "lucide-react";
-import { AppShellLayout, type AppShellLayoutProps } from "./app-shell-layout";
-import type { AppShellPanel } from "../components/app-shell";
+import { LayoutGrid, Menu, SlidersHorizontal } from "lucide-react";
+import { AppShellLayout } from "./app-shell-layout";
 import { Button } from "../components/button";
-import { Card } from "../components/card";
-import { DropdownMenuItem } from "../components/dropdown-menu";
-import { Input } from "../components/input";
+import { ChatStage } from "../components/chat-stage";
 import { Logo } from "../components/logo";
-import { NavItem } from "../components/nav-item";
-import { SidebarUserMenu } from "../components/sidebar-user-menu";
 import { SIDE_PANEL_RAIL_WIDTH } from "../components/side-panel-variants";
-import { ThemeToggle } from "../components/theme-toggle";
-import type { MobilePaneTab } from "../lib/pane-layout";
-import { usePersistedWidth } from "../lib/persisted-width";
+import {
+  AppShellFixture,
+  OverviewNavRows,
+  ShellSearch,
+  WORKSPACE_TITLE,
+} from "../test/fixtures/app-shell";
+import * as chatStageStories from "../components/chat-stage.stories";
 import * as dashboardStories from "./dashboard-layout.stories";
+import * as formStories from "./form-layout.stories";
 import * as sectionedGridStories from "./sectioned-grid-layout.stories";
+import * as tableStories from "./table-layout.stories";
 
-// Portable Stories: die Dashboard-Template-Story ist der Seiteninhalt —
-// Templates komponieren ineinander, nichts wird neu gemockt.
+/* ---------------------------------------------------------------------------
+ * One shell, adapted per context (KI-847). Every story below renders the
+ * shared `AppShellFixture` (`src/test/fixtures/app-shell.tsx`) in one of the
+ * two contexts of the reference consumer — `overview` (JLURAG `AppChrome.tsx`)
+ * or `workspace` (JLURAG `KbWorkspaceLayout.tsx`) — and every story fills the
+ * central `search`. The first five stories are one per PAGE CONTEXT; the rest
+ * are the mechanism regressions (centring, empty bar, short bar, inset,
+ * collapse, rail positions, resize, handle), on the same fixture instead of a
+ * hand-built shell of their own.
+ *
+ * No story mounts a theme toggle: colour scheme, contrast, accent and Style
+ * live behind the user menu's „Einstellungen" (`SettingsDialog` +
+ * `AppearanceSettings`, KI-850), which `Overview` walks through.
+ * ------------------------------------------------------------------------- */
+
+// Portable Stories: page content is the content templates' own stories —
+// templates compose into each other, nothing is mocked again.
 const { Standard: DashboardPage } = composeStories(dashboardStories, {});
-// Dasselbe für die Seite, die ihren Titel **selbst** rendert (`PageHeader`,
-// `<h1>Sammlungen</h1>`). Sie ist der Grund, aus dem `pageLabel` optional
-// wurde: mit Label stünde „Sammlungen" zweimal untereinander.
+// The page that renders its title ITSELF (`PageHeader`, `<h1>Sammlungen</h1>`)
+// — the reason `pageLabel` became optional: with a label, „Sammlungen" would
+// stand twice, one above the other.
 const { Standard: SectionedGridPage } = composeStories(sectionedGridStories, {});
-
-const userMenu = (
-  <SidebarUserMenu initials="JL" name="Jamie Lee" role="Admin">
-    <DropdownMenuItem>
-      <Settings width="1em" height="1em" aria-hidden />
-      Einstellungen
-    </DropdownMenuItem>
-    <DropdownMenuItem variant="destructive">
-      <LogOut width="1em" height="1em" aria-hidden />
-      Abmelden
-    </DropdownMenuItem>
-  </SidebarUserMenu>
-);
-
-const nav = (
-  <>
-    <NavItem label="Übersicht" active>
-      <LayoutDashboard width="1em" height="1em" aria-hidden />
-      <span>Übersicht</span>
-    </NavItem>
-    <NavItem label="Team">
-      <Users width="1em" height="1em" aria-hidden />
-      <span>Team</span>
-    </NavItem>
-    <NavItem label="Einstellungen">
-      <Settings width="1em" height="1em" aria-hidden />
-      <span>Einstellungen</span>
-    </NavItem>
-  </>
-);
+const { Admin: TablePageContent } = composeStories(tableStories, {});
+const { Settings: FormPageContent } = composeStories(formStories, {});
 
 /**
- * Die Reiter der schmalen Anordnung. Welcher Reiter welchen Bereich zeigt, ist
- * **Daten der App** — das Template leitet daraus nichts ab.
+ * The chat column of the workspace: `ChatStage` with the args of its own
+ * `Conversation` story. Spread rather than `composeStories`, on purpose — that
+ * story's meta decorator pins the stage to a 560px box for its own canvas,
+ * and in the shell the stage has to fill `<main>` instead.
  */
-const TABS: MobilePaneTab[] = [
-  { id: "nav", icon: <Home />, label: "Bereiche", pane: "left" },
-  { id: "page", icon: <LayoutDashboard />, label: "Seite", pane: "main" },
-  { id: "sources", icon: <FileText />, label: "Quellen", pane: "right" },
-];
+function ChatPage() {
+  return <ChatStage {...chatStageStories.default.args} {...chatStageStories.Conversation.args} />;
+}
+
+/** The workspace search's accessible name (the field is scoped to the topic). */
+const WORKSPACE_SEARCH = "Im Thema suchen";
 
 const meta = {
   title: "Templates/AppShellLayout",
   component: AppShellLayout,
   tags: ["!autodocs"],
-  parameters: { layout: "fullscreen" },
-  // Basis-Args nur für die Props-Tabelle: jede Story rendert über `render` mit
-  // eigenem Zustand, weil der Einklapp-Zustand und der aktive Reiter beim
-  // Konsumenten liegen und in Storybook nur als lokaler State existieren.
+  parameters: {
+    layout: "fullscreen",
+    // Every story renders the fixture, whose context owns the slots and the
+    // column state — a control here would edit nothing on the canvas. The
+    // MDX shows the props as a table (`ArgTypes`) instead.
+    controls: { disable: true },
+  },
+  // Required props only, so the typed stories need none of their own. The
+  // stories do not read them (see above); these are the overview context's
+  // values, for the record.
   args: {
-    logo: <Logo product="App" size="sm" />,
-    nav,
-    sidebarFooter: userMenu,
+    logo: <Logo product="RAG" />,
+    nav: null,
     leftOpen: true,
     onLeftOpenChange: () => {},
-    mobileTabs: TABS,
+    mobileTabs: [
+      { id: "nav", icon: <Menu aria-hidden="true" />, label: "Navigation", pane: "left" },
+      { id: "page", icon: <LayoutGrid aria-hidden="true" />, label: "Inhalt", pane: "main" },
+    ],
     activeMobileTab: "page",
     onMobileTabChange: () => {},
-    mobileTabBarLabel: "Bereichswechsel",
-  },
-  argTypes: {
-    rightPanel: { control: false },
-    mobileTabs: { control: false },
-    onMobileTabChange: { control: false },
-    onLeftOpenChange: { control: false },
+    mobileTabBarLabel: "Bereich wechseln",
   },
 } satisfies Meta<typeof AppShellLayout>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-/**
- * Der Einklapp-Zustand gehört der App — genau so sieht die vorgesehene
- * Verdrahtung aus (`localStorage`/URL/Context statt `useState` ändert daran
- * nichts). Das Template merkt sich nichts.
- */
-function Shell(props: Omit<AppShellLayoutProps, "leftOpen" | "onLeftOpenChange">) {
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState("page");
-  return (
-    <AppShellLayout
-      {...props}
-      leftOpen={leftOpen}
-      onLeftOpenChange={setLeftOpen}
-      activeMobileTab={activeTab}
-      onMobileTabChange={setActiveTab}
-    />
-  );
-}
 
 /**
  * Die Chrome-Zeile selbst: das `banner`-Landmark der Shell. Über die Rolle
@@ -146,201 +110,21 @@ async function expectBarHeight(canvasElement: HTMLElement) {
 }
 
 /**
- * Der Standardfall der Skizze: linke `SidePanel`-Spalte (Marke + Schalter in
- * der Kopfzeile, Navigation, gepinntes Nutzermenü), Hauptspalte mit der
- * dreiteiligen Chrome-Zeile, darunter der Seiteninhalt.
- */
-export const WithDashboard: Story = {
-  args: { pageLabel: "Dashboard", headerActions: <ThemeToggle /> },
-  render: (args) => (
-    <Shell {...args}>
-      <DashboardPage />
-    </Shell>
-  ),
-  play: async ({ canvas, canvasElement }) => {
-    await expectBarHeight(canvasElement);
-    // Die Spalte steht links neben dem Hauptbereich — aus den Layout-Boxen,
-    // nicht aus Klassennamen.
-    const column = await canvas.findByRole("complementary", { name: "Hauptnavigation" });
-    const main = canvasElement.querySelector("main")!;
-    await expect(column.getBoundingClientRect().right).toBeLessThanOrEqual(
-      main.getBoundingClientRect().left + 1,
-    );
-  },
-};
-
-/**
- * **Seit 0.30.0: `search` ist die Mitte der Zeile** — und zwar die Mitte der
- * *Zeile*, nicht die Mitte der Fläche, die das Label übrig lässt. Genau das
- * war mit dem `mx-auto`-Rezept von 0.29.0 nicht erreichbar: dort sprang das
- * Feld seitwärts, sobald ein Label da war (oder sich seine Länge änderte).
- *
- * Die `play`-Funktion misst es in Chromium: Feldmitte = Zeilenmitte, obwohl
- * links ein Label und rechts ein Umschalter unterschiedlich breit sind.
- *
- * **Gemessen für 0.30.0** (Chromium, 1280px-Fenster) — die Zahlen stehen hier
- * als Beleg jenes Releases, nicht als aktuelle Behauptung: Zeile 256–1200 →
- * Mitte **728**, Feld 504–952 → Mitte **728** (448px breit, das ist
- * `max-w-md`), Label 296–421,4 (125,4px breit), Umschalter 1058–1160 (102px
- * breit). Die beiden Ränder sind also um 23px verschieden breit, die Mitte
- * stimmt trotzdem auf den Pixel — mit dem `mx-auto`-Rezept von 0.29.0 stünde
- * das Feld hier ~11,7px daneben.
- *
- * **Seit 0.37.0 ist die linke Zahl eine andere**: die Einrückung der Zeile ist
- * `px-gutter` (24px) statt des Seitenmaßes (40px ab `md`), das Label beginnt
- * also bei 256 + 24 = **280** statt bei 296. Die Mitte ändert sich nicht — sie
- * hängt an den zwei gleich breiten Randregionen, nicht an der Einrückung, und
- * genau das prüft die `play`-Funktion unten weiterhin. Die neue Einrückung
- * misst `BarInsetIsTheColumnGutter`.
- */
-export const WithCenteredSearch: Story = {
-  args: {
-    pageLabel: "Dashboard",
-    search: (
-      <Input type="search" aria-label="Search" placeholder="Search…" leadingIcon={<Search />} />
-    ),
-    headerActions: (
-      <ThemeToggle
-        id="app-theme-toggle"
-        themeLabel="Colour scheme"
-        lightLabel="Light"
-        systemLabel="System"
-        darkLabel="Dark"
-      />
-    ),
-  },
-  render: (args) => (
-    <Shell {...args}>
-      <DashboardPage />
-    </Shell>
-  ),
-  play: async ({ canvas, canvasElement }) => {
-    await expectBarHeight(canvasElement);
-
-    // Orakel: die Symmetrie der Zeile, gerechnet aus den Boxen der
-    // Layout-Engine. In jsdom wäre dieselbe Prüfung wertlos (kein Stylesheet,
-    // alle Boxen 0×0), deshalb steht sie hier.
-    const row = bar(canvasElement).getBoundingClientRect();
-    const label = (await canvas.findByText("Dashboard")).getBoundingClientRect();
-    const toggle = (
-      await canvas.findByRole("group", { name: "Colour scheme" })
-    ).getBoundingClientRect();
-    const field = (
-      await canvas.findByRole("searchbox", { name: "Search" })
-    ).getBoundingClientRect();
-
-    await expect((field.left + field.right) / 2).toBeCloseTo((row.left + row.right) / 2, 0);
-    // …und das ist nicht trivial: links und rechts vom Feld steht
-    // unterschiedlich viel. Ohne die beiden gleich breiten Randregionen wäre
-    // die Mitte um die halbe Differenz verschoben.
-    await expect(Math.abs(label.width - toggle.width)).toBeGreaterThan(1);
-    // Das Feld füllt die Zeile nicht aus (dann wäre die Mitte trivial gleich):
-    // `max-w-md` deckelt es, links und rechts bleibt Luft.
-    await expect(field.left).toBeGreaterThan(label.right);
-    await expect(field.right).toBeLessThan(toggle.left);
-  },
-};
-
-/**
- * Dieselbe Mitte **ohne** Label — der Fall, für den `pageLabel` 0.29.0
- * optional wurde (die Seite bringt ihren Titel selbst mit). Das Feld steht an
- * genau derselben Stelle wie oben: die Zentrierung hängt nicht mehr davon ab,
- * ob links etwas steht. Gemessen für 0.30.0 (Chromium, 1280px-Fenster): Zeile
- * 256–1200 → Mitte **728**, Feld 504–952 → Mitte **728** — dieselben Zahlen
- * wie mit Label, und von der Einrückungsänderung in 0.37.0 unberührt (die
- * Mitte hängt an den Randregionen, nicht am `px-*`).
- */
-export const WithCenteredSearchOnly: Story = {
-  args: {
-    search: (
-      <Input type="search" aria-label="Search" placeholder="Search…" leadingIcon={<Search />} />
-    ),
-  },
-  render: (args) => (
-    <Shell {...args}>
-      <SectionedGridPage />
-    </Shell>
-  ),
-  play: async ({ canvas, canvasElement }) => {
-    await expectBarHeight(canvasElement);
-    const row = bar(canvasElement).getBoundingClientRect();
-    const field = (
-      await canvas.findByRole("searchbox", { name: "Search" })
-    ).getBoundingClientRect();
-    await expect((field.left + field.right) / 2).toBeCloseTo((row.left + row.right) / 2, 0);
-    await expect(field.left).toBeGreaterThan(row.left);
-    await expect(field.right).toBeLessThan(row.right);
-    // Kein Label-Element, nicht nur kein Text: die Zeile enthält keinen Absatz.
-    await expect(bar(canvasElement).querySelector("p")).toBeNull();
-  },
-};
-
-/* ------------------------------------------------------------------------ */
-/* 0.44.1 (KI-842): the search gives way before the side regions            */
-/* ------------------------------------------------------------------------ */
-
-/** A topic title long enough to need truncation in every bar measured below. */
-const TOPIC_TITLE = "Prüfungsordnung Informatik (Master of Science), Fassung 2026";
-
-/**
- * The composition JustRAG's workspace hangs into the bar (JustRAG KI-838): a
- * 36px back button plus a truncating topic title in `pageLabel`, a search
- * field in `search`, one gear in `headerActions`.
- */
-const workspaceBar = {
-  pageLabel: (
-    <span className="flex min-w-0 items-center gap-2">
-      <Button variant="ghost" size="icon" aria-label="Back">
-        <ArrowLeft className="size-5" aria-hidden />
-      </Button>
-      <span className="min-w-0 truncate">{TOPIC_TITLE}</span>
-    </span>
-  ),
-  search: (
-    <Input type="search" aria-label="Search" placeholder="Search…" leadingIcon={<Search />} />
-  ),
-  headerActions: (
-    <Button variant="ghost" size="icon" aria-label="Settings">
-      <Settings className="size-5" aria-hidden />
-    </Button>
-  ),
-} satisfies Partial<AppShellLayoutProps>;
-
-/** The right column of the measured consumer screen, at a given width. */
-const sourcesPanel = (width: number): AppShellPanel => ({
-  content: (
-    <div className="flex flex-col gap-stack-md p-gutter">
-      <Card className="p-4">Quelle 1</Card>
-    </div>
-  ),
-  header: <span className="truncate font-title-md">Quellen</span>,
-  label: "Quellen",
-  isOpen: true,
-  onOpenChange: () => {},
-  width,
-  expandLabel: "Quellen ausklappen",
-  collapseLabel: "Quellen einklappen",
-});
-
-/** Both side columns at the measured 320px. */
-const COLUMN_WIDTH = 320;
-
-/**
- * The boxes of `workspaceBar`'s four controls, plus the two boxes that can
+ * The boxes of the workspace bar's four controls, plus the two boxes that can
  * clip them: the bar's row and the label's `<p>` (`truncate` =
  * `overflow: hidden`, so whatever sticks out of it is cut off, not shown).
  */
 function measureWorkspaceBar(canvasElement: HTMLElement) {
   const header = bar(canvasElement);
   const q = within(header);
-  const titleEl = q.getByText(TOPIC_TITLE);
+  const titleEl = q.getByText(WORKSPACE_TITLE);
   return {
     row: header.getBoundingClientRect(),
     label: (titleEl.closest("p") as HTMLElement).getBoundingClientRect(),
-    back: q.getByRole("button", { name: "Back" }).getBoundingClientRect(),
+    back: q.getByRole("button", { name: "Zurück zur Übersicht" }).getBoundingClientRect(),
     title: titleEl.getBoundingClientRect(),
-    field: q.getByRole("searchbox", { name: "Search" }).getBoundingClientRect(),
-    gear: q.getByRole("button", { name: "Settings" }).getBoundingClientRect(),
+    field: q.getByRole("searchbox", { name: WORKSPACE_SEARCH }).getBoundingClientRect(),
+    gear: q.getByRole("button", { name: "Einstellungen des Themas" }).getBoundingClientRect(),
   };
 }
 type WorkspaceBarBoxes = ReturnType<typeof measureWorkspaceBar>;
@@ -373,14 +157,319 @@ async function expectCentred(g: WorkspaceBarBoxes) {
   await expect(Math.abs(fieldCentre - barCentre)).toBeLessThanOrEqual(1);
 }
 
+/** Portalled layers (menu, dialog) render into `<body>`, outside the canvas. */
+const page = (canvasElement: HTMLElement) => within(canvasElement.ownerDocument.body);
+
+/* ======================================================================== */
+/* One story per page context                                               */
+/* ======================================================================== */
+
+/**
+ * **The overview context** — JLURAG's `AppChrome.tsx`: the brand, NavItem
+ * rows in a `SidebarPanel`, the user menu pinned to the column's foot, and
+ * the search as the bar's ONE control — no `pageLabel` (the content template
+ * renders the page's `<h1>`), no `headerActions`. The page is
+ * `SectionedGridLayout`, the overview/browse template.
+ *
+ * `play` (Chromium), oracles in brackets:
+ * 1. the bar is 64px [the published geometry contract JustRAG positions its
+ *    toasts against, not a number read from the component];
+ * 2. the column stands left of `<main>` [the layout engine's boxes];
+ * 3. the field is centred on the bar with no label beside it, and the bar
+ *    renders no label element at all [the bar's own box; the DOM] — until
+ *    KI-847 the story `WithCenteredSearchOnly`;
+ * 4. „Einstellungen" in the user menu opens the settings window on its
+ *    „Darstellung" section, and it closes again [ARIA roles and names:
+ *    `menuitem`, `dialog`, `heading` level 2, `combobox`] — the route that
+ *    replaced a theme toggle in the bar.
+ */
+export const Overview: Story = {
+  render: () => (
+    <AppShellFixture context="overview" search={<ShellSearch />}>
+      <SectionedGridPage />
+    </AppShellFixture>
+  ),
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    await expectBarHeight(canvasElement);
+
+    const column = await canvas.findByRole("complementary", { name: "Hauptnavigation" });
+    const main = canvasElement.querySelector("main")!;
+    await expect(column.getBoundingClientRect().right).toBeLessThanOrEqual(
+      main.getBoundingClientRect().left + 1,
+    );
+
+    const row = bar(canvasElement).getBoundingClientRect();
+    const field = (
+      await canvas.findByRole("searchbox", { name: "Suchen" })
+    ).getBoundingClientRect();
+    await expect((field.left + field.right) / 2).toBeCloseTo((row.left + row.right) / 2, 0);
+    await expect(field.left).toBeGreaterThan(row.left);
+    await expect(field.right).toBeLessThan(row.right);
+    // Kein Label-Element, nicht nur kein Text: die Zeile enthält keinen Absatz.
+    await expect(bar(canvasElement).querySelector("p")).toBeNull();
+
+    const body = page(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: /Jamie Lee/ }));
+    await userEvent.click(await body.findByRole("menuitem", { name: "Einstellungen" }));
+    const dialog = await body.findByRole("dialog", { name: "Einstellungen" });
+    await expect(
+      within(dialog).getByRole("heading", { level: 2, name: "Darstellung" }),
+    ).toBeVisible();
+    await expect(within(dialog).getByRole("combobox", { name: "Farbschema" })).toBeVisible();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Schließen" }));
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+  },
+};
+
+/**
+ * **The workspace context** — JLURAG's `KbWorkspaceLayout.tsx`: the chat
+ * history as the left column, back button + topic title as `pageLabel`, the
+ * topic-scoped search in the centre, a ghost gear in `headerActions`, the
+ * sources as `rightPanel` (with a `collapsedPreview` rail), both columns
+ * resizable, and `ChatStage` as the page.
+ *
+ * `play` (Chromium, the runner's 1280px window, both columns at their 320px
+ * default), oracles in brackets:
+ * 1. the bar is 64px [the published contract, as above];
+ * 2. history | main | sources, left to right [the layout boxes] — until
+ *    KI-847 the story `WithRightPanel`;
+ * 3. each column has its named separator [ARIA `separator` + name];
+ * 4. the bar's four controls do not overlap or clip, and the field sits on
+ *    the bar's centre [the boxes against each other and against the bar] —
+ *    the real consumer composition at the real consumer widths, not only the
+ *    fixed-width reproductions further down.
+ */
+export const ChatWorkspace: Story = {
+  render: () => (
+    <AppShellFixture context="workspace" search={<ShellSearch label={WORKSPACE_SEARCH} />}>
+      <ChatPage />
+    </AppShellFixture>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await expectBarHeight(canvasElement);
+
+    const history = (
+      await canvas.findByRole("complementary", { name: "Verlauf" })
+    ).getBoundingClientRect();
+    const sources = (
+      await canvas.findByRole("complementary", { name: "Quellen" })
+    ).getBoundingClientRect();
+    const main = canvasElement.querySelector("main")!.getBoundingClientRect();
+    await expect(history.right).toBeLessThanOrEqual(main.left + 1);
+    await expect(main.right).toBeLessThanOrEqual(sources.left + 1);
+
+    await expect(
+      await canvas.findByRole("separator", { name: "Breite des Verlaufs ändern" }),
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole("separator", { name: "Breite der Quellen ändern" }),
+    ).toBeInTheDocument();
+
+    const g = measureWorkspaceBar(canvasElement);
+    await expectNoOverlap(g);
+    await expectCentred(g);
+  },
+};
+
+/**
+ * **A table page in the overview shell** — `TableLayout` (its `Admin` story)
+ * as `children`. The shell brings the chrome and the one `<main>`; the
+ * content template brings the page's heading.
+ *
+ * `play` oracle: the ARIA tree — exactly one `main`, the table inside it, and
+ * the content template's `<h1>` as the page's only level-1 heading (the
+ * shell contributes none; `pageLabel` would be a `<p>`).
+ */
+export const TablePage: Story = {
+  render: () => (
+    <AppShellFixture context="overview" search={<ShellSearch />}>
+      <TablePageContent />
+    </AppShellFixture>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await expectBarHeight(canvasElement);
+    const mains = canvas.getAllByRole("main");
+    await expect(mains).toHaveLength(1);
+    await expect(within(mains[0]).getByRole("table")).toBeVisible();
+    await expect(
+      within(mains[0]).getByRole("heading", { level: 1, name: "Elemente" }),
+    ).toBeVisible();
+    await expect(canvas.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  },
+};
+
+/**
+ * **A form page in the overview shell** — `FormLayout` (its `Settings` story)
+ * as `children`. Same composition rule and the same oracle as `TablePage`:
+ * one `main`, the form's submit button inside it, one `<h1>` — the form's.
+ */
+export const FormPage: Story = {
+  render: () => (
+    <AppShellFixture context="overview" search={<ShellSearch />}>
+      <FormPageContent />
+    </AppShellFixture>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await expectBarHeight(canvasElement);
+    const mains = canvas.getAllByRole("main");
+    await expect(mains).toHaveLength(1);
+    await expect(within(mains[0]).getByRole("button", { name: "Speichern" })).toBeVisible();
+    await expect(
+      within(mains[0]).getByRole("heading", { level: 1, name: "Element-Einstellungen" }),
+    ).toBeVisible();
+    await expect(canvas.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  },
+};
+
+/**
+ * Die Anordnung unter `lg`, hier im Workspace-Kontext mit seinen drei
+ * Reitern (Verlauf · Chat · Quellen): Top-Bar mit der Marke und den
+ * `headerActions` (das Zahnrad bleibt erreichbar), **ein** Bereich,
+ * `BottomTabBar`. Kein Burger-Button, kein Drawer, kein Dialog. `search`
+ * ist übergeben wie überall — das Template rendert es unter `lg` bewusst
+ * nicht (ein auf `max-w-md` gedeckeltes, zentriertes Feld hat in 390px keine
+ * Mitte).
+ *
+ * **Ohne `play`-Assertions, mit Absicht** — die Anordnung hängt am echten
+ * Viewport (`matchMedia`), und der Storybook-Vitest-Lauf rendert Stories in
+ * einem 1280px-Fenster, nicht im hier eingestellten Story-Viewport. Geprüft
+ * ist sie in `app-shell-layout.test.tsx` (jsdom, gestubbter Viewport).
+ */
+export const Mobile: Story = {
+  parameters: {
+    viewport: {
+      options: {
+        phone: { name: "Phone", styles: { width: "390px", height: "844px" } },
+      },
+    },
+  },
+  globals: { viewport: { value: "phone" } },
+  render: () => (
+    <AppShellFixture context="workspace" search={<ShellSearch label={WORKSPACE_SEARCH} />}>
+      <ChatPage />
+    </AppShellFixture>
+  ),
+};
+
+/* ======================================================================== */
+/* Mechanism regressions, on the same fixture                               */
+/* ======================================================================== */
+
+/**
+ * A second, narrower control for the right-hand region of an overview bar —
+ * the overview context has none of its own (JLURAG's `AppChrome` passes no
+ * `headerActions`). An icon button, so the two side regions hold content of
+ * clearly different widths.
+ */
+const viewOptions = (
+  <Button variant="ghost" size="icon" aria-label="Ansicht anpassen">
+    <SlidersHorizontal size={20} aria-hidden="true" />
+  </Button>
+);
+
+/**
+ * **Seit 0.30.0: `search` ist die Mitte der Zeile** — und zwar die Mitte der
+ * *Zeile*, nicht die Mitte der Fläche, die das Label übrig lässt. Genau das
+ * war mit dem `mx-auto`-Rezept von 0.29.0 nicht erreichbar: dort sprang das
+ * Feld seitwärts, sobald ein Label da war (oder sich seine Länge änderte).
+ *
+ * Die `play`-Funktion misst es in Chromium: Feldmitte = Zeilenmitte, obwohl
+ * links ein Label und rechts ein Bedienelement unterschiedlich breit sind.
+ *
+ * **Gemessen für 0.30.0** (Chromium, 1280px-Fenster) — die Zahlen stehen hier
+ * als Beleg jenes Releases, nicht als aktuelle Behauptung: Zeile 256–1200 →
+ * Mitte **728**, Feld 504–952 → Mitte **728** (448px breit, das ist
+ * `max-w-md`), Label 296–421,4 (125,4px breit), damals ein Theme-Umschalter
+ * 1058–1160 (102px breit). Die beiden Ränder waren also um 23px verschieden
+ * breit, die Mitte stimmte trotzdem auf den Pixel.
+ *
+ * **Seit 0.37.0** beginnt das Label bei 256 + 24 = **280** (Einrückung
+ * `px-gutter`, siehe `BarInsetIsTheColumnGutter`); die Mitte hängt an den zwei
+ * gleich breiten Randregionen, nicht an der Einrückung. **Seit KI-847** steht
+ * rechts statt des Theme-Umschalters ein 36px-Icon-Knopf — der Unterschied der
+ * beiden Ränder ist damit größer, nicht kleiner, und die Prüfung unten
+ * verlangt ihn weiterhin.
+ */
+export const WithCenteredSearch: Story = {
+  render: () => (
+    <AppShellFixture
+      context="overview"
+      pageLabel="Dashboard"
+      search={<ShellSearch />}
+      headerActions={viewOptions}
+    >
+      <DashboardPage />
+    </AppShellFixture>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await expectBarHeight(canvasElement);
+
+    // Orakel: die Symmetrie der Zeile, gerechnet aus den Boxen der
+    // Layout-Engine. In jsdom wäre dieselbe Prüfung wertlos (kein Stylesheet,
+    // alle Boxen 0×0), deshalb steht sie hier.
+    const row = bar(canvasElement).getBoundingClientRect();
+    const label = (await canvas.findByText("Dashboard")).getBoundingClientRect();
+    const action = (
+      await canvas.findByRole("button", { name: "Ansicht anpassen" })
+    ).getBoundingClientRect();
+    const field = (
+      await canvas.findByRole("searchbox", { name: "Suchen" })
+    ).getBoundingClientRect();
+
+    await expect((field.left + field.right) / 2).toBeCloseTo((row.left + row.right) / 2, 0);
+    // …und das ist nicht trivial: links und rechts vom Feld steht
+    // unterschiedlich viel. Ohne die beiden gleich breiten Randregionen wäre
+    // die Mitte um die halbe Differenz verschoben.
+    await expect(Math.abs(label.width - action.width)).toBeGreaterThan(1);
+    // Das Feld füllt die Zeile nicht aus (dann wäre die Mitte trivial gleich):
+    // `max-w-md` deckelt es, links und rechts bleibt Luft.
+    await expect(field.left).toBeGreaterThan(label.right);
+    await expect(field.right).toBeLessThan(action.left);
+  },
+};
+
+/**
+ * Weder Label noch Suche noch Aktionen — die leere Zeile. Sie bleibt trotzdem
+ * **64px hoch**: Consumer legen Overlays unter dieser Kante ab (JustRAGs
+ * `Toast.css`: `top: 76px` = 64 + 12), und eine Zeile, die beim Weglassen der
+ * letzten Prop zusammenfiele, wäre für eine unveränderte Aufrufstelle eine
+ * brechende Geometrie-Änderung.
+ *
+ * **The one story that opts out of the search convention**, and it says so:
+ * `null` as its search. `search` stays optional on the component, and what an app
+ * gets when it omits every slot is exactly the contract this story pins.
+ */
+export const WithoutPageLabelOrActions: Story = {
+  render: () => (
+    <AppShellFixture context="overview" search={null}>
+      <SectionedGridPage />
+    </AppShellFixture>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectBarHeight(canvasElement);
+    // Leer heißt leer: die Zeile trägt keinen Text und keinen Absatz.
+    await expect(bar(canvasElement).textContent).toBe("");
+    await expect(bar(canvasElement).querySelector("p")).toBeNull();
+  },
+};
+
+/* ------------------------------------------------------------------------ */
+/* 0.44.1 (KI-842): the search gives way before the side regions            */
+/* ------------------------------------------------------------------------ */
+
+/** Both side columns at the measured 320px (also the workspace default). */
+const COLUMN_WIDTH = 320;
+
 /**
  * **0.44.1 — the narrow bar keeps its label (KI-842).** The reproduction of
  * JustRAG's measured case (KI-838, `KbWorkspaceLayout ›
  * WorkspaceBarWithScopedSearch`, Chromium, both side columns open at 320px):
  * a **560px** bar holding a back button and a topic title, a search field and
- * a gear. The shell is fixed at 1200px (= 560 + 2 × 320) so the bar is 560
- * whatever the Storybook viewport — only the bar's own width enters its flex
- * computation.
+ * a gear — the workspace context's own bar. The shell is fixed at 1200px
+ * (= 560 + 2 × 320) and both widths are pinned, so the bar is 560 whatever
+ * the Storybook viewport — only the bar's own width enters its flex
+ * computation. (Both columns carry a resize handle here; since 0.38.0 a
+ * handle has no layout width, see `HandleHasNoLayoutWidth`.)
  *
  * **Until 0.44.0** the search kept its full 28rem (448px) here and the two
  * side regions absorbed the whole shortfall: measured on the claim-base code
@@ -400,16 +489,16 @@ async function expectCentred(g: WorkspaceBarBoxes) {
  * different case: the bar IS 560px and the back button IS 36px.
  */
 export const NarrowBarKeepsTheLabel: Story = {
-  args: workspaceBar,
-  render: (args) => (
-    <Shell
-      {...args}
+  render: () => (
+    <AppShellFixture
+      context="workspace"
+      search={<ShellSearch label={WORKSPACE_SEARCH} />}
       leftWidth={COLUMN_WIDTH}
-      rightPanel={sourcesPanel(COLUMN_WIDTH)}
+      rightWidth={COLUMN_WIDTH}
       style={{ width: 560 + 2 * COLUMN_WIDTH }}
     >
-      <DashboardPage />
-    </Shell>
+      <ChatPage />
+    </AppShellFixture>
   ),
   play: async ({ canvasElement }) => {
     await expectBarHeight(canvasElement);
@@ -420,7 +509,7 @@ export const NarrowBarKeepsTheLabel: Story = {
     await expect(g.title.width).toBeGreaterThanOrEqual(120);
     // …and `truncate` still does its job: the title is clipped, not wrapped
     // and not pushing anything aside.
-    const titleEl = within(bar(canvasElement)).getByText(TOPIC_TITLE);
+    const titleEl = within(bar(canvasElement)).getByText(WORKSPACE_TITLE);
     await expect(titleEl.scrollWidth).toBeGreaterThan(titleEl.clientWidth);
     await expectNoOverlap(g);
     await expectCentred(g);
@@ -430,19 +519,25 @@ export const NarrowBarKeepsTheLabel: Story = {
 /**
  * **The wide bar is unchanged by 0.44.1**: with room to spare the search is
  * still capped at **28rem** and centred on the bar, and the side regions share
- * the rest equally. The shell is fixed at 1280px with the left column at its
- * 256px default and no right column, so the bar is 1024px.
+ * the rest equally. The shell is fixed at 1280px with the left column at
+ * 256px and the sources column out of the desktop arrangement
+ * (`showRight={false}`), so the bar is 1024px.
  *
  * Oracle for the width: 28 × the root font size read back from the CSSOM —
  * the documented `max-w-md` contract of `search`, not a class name or a
  * number read out of the component.
  */
 export const WideBarKeepsTheSearchAtItsMaximum: Story = {
-  args: workspaceBar,
-  render: (args) => (
-    <Shell {...args} style={{ width: 1280 }}>
-      <DashboardPage />
-    </Shell>
+  render: () => (
+    <AppShellFixture
+      context="workspace"
+      search={<ShellSearch label={WORKSPACE_SEARCH} />}
+      leftWidth={256}
+      showRight={false}
+      style={{ width: 1280 }}
+    >
+      <ChatPage />
+    </AppShellFixture>
   ),
   play: async ({ canvasElement }) => {
     await expectBarHeight(canvasElement);
@@ -485,11 +580,16 @@ export const WideBarKeepsTheSearchAtItsMaximum: Story = {
  * between measurements; React does not re-render, the layout engine re-flows.
  */
 export const BarGivesWayInOrder: Story = {
-  args: { ...workspaceBar, id: "shrink-order-shell" },
-  render: (args) => (
-    <Shell {...args} leftWidth={COLUMN_WIDTH} rightPanel={sourcesPanel(COLUMN_WIDTH)}>
-      <DashboardPage />
-    </Shell>
+  render: () => (
+    <AppShellFixture
+      context="workspace"
+      id="shrink-order-shell"
+      search={<ShellSearch label={WORKSPACE_SEARCH} />}
+      leftWidth={COLUMN_WIDTH}
+      rightWidth={COLUMN_WIDTH}
+    >
+      <ChatPage />
+    </AppShellFixture>
   ),
   play: async ({ canvasElement }) => {
     const shell = document.getElementById("shrink-order-shell") as HTMLElement;
@@ -523,65 +623,6 @@ export const BarGivesWayInOrder: Story = {
 };
 
 /**
- * Weder Label noch Suche noch Aktionen — die leere Zeile. Sie bleibt trotzdem
- * **64px hoch**: Consumer legen Overlays unter dieser Kante ab (JustRAGs
- * `Toast.css`: `top: 76px` = 64 + 12), und eine Zeile, die beim Weglassen der
- * letzten Prop zusammenfiele, wäre für eine unveränderte Aufrufstelle eine
- * brechende Geometrie-Änderung.
- */
-export const WithoutPageLabelOrActions: Story = {
-  render: (args) => (
-    <Shell {...args}>
-      <SectionedGridPage />
-    </Shell>
-  ),
-  play: async ({ canvasElement }) => {
-    await expectBarHeight(canvasElement);
-    // Leer heißt leer: die Zeile trägt keinen Text und keinen Absatz.
-    await expect(bar(canvasElement).textContent).toBe("");
-    await expect(bar(canvasElement).querySelector("p")).toBeNull();
-  },
-};
-
-/**
- * **Seit 0.30.0: eine zweite Spalte rechts.** `rightPanel` ist genau das
- * `AppShellPanel`, das `AppShell` selbst nimmt — dieselben acht Werte, kein
- * zweites Vokabular. Weggelassen gibt es weder Landmark noch Schiene.
- */
-export const WithRightPanel: Story = {
-  args: {
-    pageLabel: "Dashboard",
-    headerActions: <ThemeToggle />,
-    rightPanel: {
-      content: (
-        <div className="flex flex-col gap-stack-md p-gutter">
-          <Card className="p-4">Quelle 1</Card>
-          <Card className="p-4">Quelle 2</Card>
-        </div>
-      ),
-      header: <span className="truncate font-title-md">Quellen</span>,
-      label: "Quellen",
-      isOpen: true,
-      onOpenChange: () => {},
-      expandLabel: "Quellen ausklappen",
-      collapseLabel: "Quellen einklappen",
-    },
-  },
-  render: (args) => (
-    <Shell {...args}>
-      <DashboardPage />
-    </Shell>
-  ),
-  play: async ({ canvas, canvasElement }) => {
-    const main = canvasElement.querySelector("main")!;
-    const right = await canvas.findByRole("complementary", { name: "Quellen" });
-    await expect(main.getBoundingClientRect().right).toBeLessThanOrEqual(
-      right.getBoundingClientRect().left + 1,
-    );
-  },
-};
-
-/**
  * **Seit 0.37.0: die Zeile nimmt den Spalten-Gutter.** Bis 0.36.0 steckten
  * beide Leisten in einem `Container` — dem **Seitenmaß** (`px-gutter
  * md:px-margin-page`, zentriert, gedeckelt), also 40px ab `md`. Die Zeile ist
@@ -605,11 +646,10 @@ export const WithRightPanel: Story = {
  * dasselbe Maß hat: 16px, das Maß des Rumpfs.
  */
 export const BarInsetIsTheColumnGutter: Story = {
-  args: { pageLabel: "Dashboard", headerActions: <ThemeToggle /> },
-  render: (args) => (
-    <Shell {...args}>
+  render: () => (
+    <AppShellFixture context="overview" pageLabel="Dashboard" search={<ShellSearch />}>
       <DashboardPage />
-    </Shell>
+    </AppShellFixture>
   ),
   play: async ({ canvas, canvasElement }) => {
     const column = (
@@ -670,11 +710,10 @@ export const BarInsetIsTheColumnGutter: Story = {
  * klicken die volle Spalte.
  */
 export const WithCollapsibleColumns: Story = {
-  args: { pageLabel: "Dashboard", headerActions: <ThemeToggle /> },
-  render: (args) => (
-    <Shell {...args}>
-      <DashboardPage />
-    </Shell>
+  render: () => (
+    <AppShellFixture context="overview" search={<ShellSearch />}>
+      <SectionedGridPage />
+    </AppShellFixture>
   ),
   play: async ({ canvas, canvasElement, userEvent }) => {
     // Orakel für die ausgeklappte Breite: der in `src/tokens.css` deklarierte
@@ -694,6 +733,8 @@ export const WithCollapsibleColumns: Story = {
     await expect(column().getBoundingClientRect().width).toBe(
       tokenWidth("--width-sidebar"),
     );
+    // Ausgeklappt trägt die Kopfzeile der Spalte die Marke („JLU RAG").
+    await expect(canvas.getByText("RAG")).toBeVisible();
 
     await userEvent.click(await canvas.findByRole("button", { name: "Navigation einklappen" }));
     await expect(column().getBoundingClientRect().width).toBe(SIDE_PANEL_RAIL_WIDTH);
@@ -706,12 +747,14 @@ export const WithCollapsibleColumns: Story = {
        zusätzlich gerendert — zwei Kopien würden jede `id` und jedes
        `aria-current` in einer `NavItem` verdoppeln. */
     await expect(canvas.getAllByRole("navigation", { name: "Hauptnavigation" })).toHaveLength(1);
-    await expect(canvas.queryByText("Marke")).toBeNull();
+    // Die Marke („JLU RAG") ist mit der Kopfzeile aus der Spalte verschwunden
+    // — und die breite Zeile trägt keine eigene.
+    await expect(canvas.queryByText("RAG")).toBeNull();
 
     /* Und die Zeilen passen wirklich in 60px — das ist die Messung, die nur der
        Browser-Runner machen kann (jsdom hat kein Layout). Orakel: die
        exportierte Designkonstante, nicht eine literale 60. */
-    const row = await canvas.findByRole("button", { name: "Team" });
+    const row = await canvas.findByRole("button", { name: "Mit mir geteilt" });
     await expect(row.getBoundingClientRect().width).toBeLessThanOrEqual(
       SIDE_PANEL_RAIL_WIDTH,
     );
@@ -721,40 +764,6 @@ export const WithCollapsibleColumns: Story = {
       tokenWidth("--width-sidebar"),
     );
   },
-};
-
-/**
- * Die Anordnung unter `lg`: Top-Bar mit der Marke (und den `headerActions`,
- * damit die App ihre Chrome-Bedienelemente nicht verliert), **ein** Bereich,
- * `BottomTabBar`. Kein Burger-Button, kein Drawer, kein Dialog — und damit
- * auch kein Knoten, der zweimal im Dokument hängt.
- *
- * **Ohne `play`-Assertions, mit Absicht** — die Anordnung hängt am echten
- * Viewport (`matchMedia`), und der Storybook-Vitest-Lauf rendert Stories in
- * einem 1280px-Fenster, nicht im hier eingestellten Story-Viewport. Geprüft
- * ist sie in `app-shell-layout.test.tsx` (jsdom, gestubbter Viewport).
- */
-export const Mobile: Story = {
-  args: {
-    pageLabel: "Dashboard",
-    headerActions: <ThemeToggle />,
-    search: (
-      <Input type="search" aria-label="Search" placeholder="Search…" leadingIcon={<Search />} />
-    ),
-  },
-  parameters: {
-    viewport: {
-      options: {
-        phone: { name: "Phone", styles: { width: "390px", height: "844px" } },
-      },
-    },
-  },
-  globals: { viewport: { value: "phone" } },
-  render: (args) => (
-    <Shell {...args}>
-      <DashboardPage />
-    </Shell>
-  ),
 };
 
 /**
@@ -771,13 +780,20 @@ export const Mobile: Story = {
  * Das Orakel ist der AUSGEKLAPPTE Zustand, nicht eine im Code abgelesene Zahl:
  * die ausgeklappte Spalte ist die, an der sich die eingeklappte auszurichten
  * hat, und beide Messungen kommen aus demselben Browser-Layout.
+ *
+ * **The nav is the bare rows here (`OverviewNavRows`), not the overview
+ * context's `SidebarPanel` frame** — the rail mirrors `AppShellLayout`'s own
+ * `p-4` nav wrapper, and that is the mechanism this story pins. With the
+ * panel frame (JLURAG's `SidebarNav`, the fixture's default) the first row
+ * sits 92px below the column's top expanded and 80px in the rail, measured in
+ * Chromium on KI-847.
+ * TODO: that 12px jump is a finding, not yet decided — package or consumer.
  */
 export const CollapsedRailKeepsVerticalPositions: Story = {
-  args: { pageLabel: "Dashboard", headerActions: <ThemeToggle /> },
-  render: (args) => (
-    <Shell {...args}>
-      <DashboardPage />
-    </Shell>
+  render: () => (
+    <AppShellFixture context="overview" nav={<OverviewNavRows />} search={<ShellSearch />}>
+      <SectionedGridPage />
+    </AppShellFixture>
   ),
   play: async ({ canvas, canvasElement, userEvent }) => {
     const column = () => canvasElement.querySelector("aside") as HTMLElement;
@@ -797,7 +813,7 @@ export const CollapsedRailKeepsVerticalPositions: Story = {
 
     const toggleOpen = await canvas.findByRole("button", { name: "Navigation einklappen" });
     const openToggleCentre = centreY(toggleOpen);
-    const openNavTop = offsetTop(await canvas.findByRole("button", { name: "Übersicht" }));
+    const openNavTop = offsetTop(await canvas.findByRole("button", { name: "Meine Sammlungen" }));
     const openFootBottom = offsetBottom(
       await canvas.findByRole("button", { name: /Jamie Lee/ }),
     );
@@ -808,9 +824,9 @@ export const CollapsedRailKeepsVerticalPositions: Story = {
     await expect(centreY(toggleRail)).toBe(openToggleCentre);
     // Dieselbe Zeile, jetzt in ihrer Icon-Form: `NavItem` behält seinen Namen
     // über `aria-label`, deshalb findet sie derselbe Selektor.
-    await expect(offsetTop(await canvas.findByRole("button", { name: "Übersicht" }))).toBe(
-      openNavTop,
-    );
+    await expect(
+      offsetTop(await canvas.findByRole("button", { name: "Meine Sammlungen" })),
+    ).toBe(openNavTop);
     /* Und der Fuß: derselbe Knoten, derselbe Abstand zur Unterkante. Die
        Schiene brachte hier bis 0.34.0 ein eigenes `pb-stack-md` mit, zusätzlich
        zur Polsterung im Knoten des Konsumenten — der Nutzermenü-Knopf saß
@@ -823,103 +839,12 @@ export const CollapsedRailKeepsVerticalPositions: Story = {
 };
 
 /**
- * Der Story-Speicher: ein `Storage` im Arbeitsspeicher, damit der
- * Storybook-Vitest-Lauf nicht in die echte `localStorage` des Runners
- * schreibt. Eine App lässt `storage` weg — dann ist es `window.localStorage`,
- * und genau das ist der Unterschied zwischen dieser Story und dem Ernstfall.
- */
-function memoryStorage(): Storage {
-  const map = new Map<string, string>();
-  return {
-    get length() {
-      return map.size;
-    },
-    key: (index: number) => [...map.keys()][index] ?? null,
-    getItem: (key: string) => map.get(key) ?? null,
-    setItem: (key: string, value: string) => void map.set(key, String(value)),
-    removeItem: (key: string) => void map.delete(key),
-    clear: () => map.clear(),
-  } satisfies Storage;
-}
-
-const storyStorage = memoryStorage();
-
-/**
- * Beide Breiten über `usePersistedWidth` — **genau die Verdrahtung, die eine
- * App schreibt**, bis auf das injizierte `storage`. Der Konsument übergibt den
- * **ganzen** Schlüssel (das Paket vergibt keinen Namensraum), und die
- * Komponenten bleiben kontrolliert: der Haken ist das Stück, das in `width`
- * und `resize.onWidthChange` eingehängt wird, kein Default in der Komponente.
- */
-function ResizableShell(
-  props: Omit<
-    AppShellLayoutProps,
-    "leftOpen" | "onLeftOpenChange" | "leftWidth" | "leftResize" | "rightPanel"
-  >,
-) {
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState("page");
-  const [leftWidth, setLeftWidth] = usePersistedWidth("storybook.appShell.leftWidth", {
-    defaultWidth: 300,
-    minWidth: 200,
-    maxWidth: 560,
-    storage: storyStorage,
-  });
-  const [rightWidth, setRightWidth] = usePersistedWidth("storybook.appShell.rightWidth", {
-    defaultWidth: 280,
-    minWidth: 200,
-    maxWidth: 520,
-    storage: storyStorage,
-  });
-  return (
-    <AppShellLayout
-      {...props}
-      leftOpen={leftOpen}
-      onLeftOpenChange={setLeftOpen}
-      activeMobileTab={activeTab}
-      onMobileTabChange={setActiveTab}
-      leftWidth={leftWidth}
-      leftResize={{
-        minWidth: 200,
-        maxWidth: 560,
-        onWidthChange: setLeftWidth,
-        label: "Breite der Navigation ändern",
-      }}
-      rightPanel={{
-        content: (
-          <div className="flex flex-col gap-stack-md p-gutter">
-            <Card className="p-4">Quelle 1</Card>
-            <Card className="p-4">Quelle 2</Card>
-          </div>
-        ),
-        header: <span className="truncate font-title-md">Quellen</span>,
-        label: "Quellen",
-        isOpen: true,
-        onOpenChange: () => {},
-        width: rightWidth,
-        expandLabel: "Quellen ausklappen",
-        collapseLabel: "Quellen einklappen",
-        resize: {
-          minWidth: 200,
-          maxWidth: 520,
-          onWidthChange: setRightWidth,
-          label: "Breite der Quellen ändern",
-        },
-      }}
-    >
-      <DashboardPage />
-    </AppShellLayout>
-  );
-}
-
-/**
- * **Seit 0.36.0: beide Spalten sind ziehbar.** Die Shell komponiert dafür
- * `SidePanel` + `ResizeHandle` — genau die Komposition, die `WorkspaceLayout`
- * seit 0.23.1 hat; es gibt keinen zweiten Mechanismus und keine Speicherung im
- * Paket. Die Breiten sind **Zustand der App** (`useState` hier,
- * `localStorage`/Context in einer echten App): `onWidthChange` liefert jeden
- * geklemmten Wert, die App reicht ihn über `leftWidth` bzw. `rightPanel.width`
- * zurück.
+ * **Seit 0.36.0: beide Spalten sind ziehbar** — hier im Workspace-Kontext,
+ * dem, in dem beide Spalten es sind. Die Shell komponiert dafür `SidePanel` +
+ * `ResizeHandle` — genau die Komposition, die `WorkspaceLayout` seit 0.23.1
+ * hat; es gibt keinen zweiten Mechanismus und keine Speicherung im Paket. Die
+ * Breiten sind **Zustand der App**: `onWidthChange` liefert jeden geklemmten
+ * Wert, die App reicht ihn über `leftWidth` bzw. `rightPanel.width` zurück.
  *
  * Die `play`-Funktion misst in Chromium, was jsdom nicht kann: sie fokussiert
  * den linken Trenner, drückt dreimal `→` und prüft, dass die **gemessene**
@@ -934,22 +859,23 @@ function ResizableShell(
  *
  * **Die Breiten hält `usePersistedWidth`** (0.36.0) — der Haken, der die
  * gezogene Breite pro Gerät überlebt, mit dem **ganzen** Schlüssel vom
- * Konsumenten. Diese Story reicht ein `Storage` im Arbeitsspeicher herein,
- * damit der Testlauf nichts in der echten `localStorage` hinterlässt; eine App
- * lässt `storage` weg.
+ * Konsumenten. Die Fixture reicht pro Montierung ein `Storage` im
+ * Arbeitsspeicher herein, damit der Testlauf nichts in der echten
+ * `localStorage` hinterlässt; eine App lässt `storage` weg.
  */
 export const WithResizableColumns: Story = {
-  args: { pageLabel: "Wissensbasis", headerActions: <ThemeToggle /> },
-  render: (args) => <ResizableShell {...args} />,
+  render: () => (
+    <AppShellFixture context="workspace" search={<ShellSearch label={WORKSPACE_SEARCH} />}>
+      <ChatPage />
+    </AppShellFixture>
+  ),
   play: async ({ canvas, userEvent }) => {
     const step = 10;
 
     // Linke Spalte: `→` verbreitert sie.
-    const leftColumn = await canvas.findByRole("complementary", {
-      name: "Hauptnavigation",
-    });
+    const leftColumn = await canvas.findByRole("complementary", { name: "Verlauf" });
     const leftHandle = await canvas.findByRole("separator", {
-      name: "Breite der Navigation ändern",
+      name: "Breite des Verlaufs ändern",
     });
     const leftBefore = leftColumn.getBoundingClientRect().width;
     leftHandle.focus();
@@ -1010,19 +936,20 @@ export const WithResizableColumns: Story = {
  * von per JavaScript verschickten Pointer-Events nicht ausgelöst.
  */
 export const HandleHasNoLayoutWidth: Story = {
-  args: { pageLabel: "Wissensbasis", headerActions: <ThemeToggle /> },
-  render: (args) => <ResizableShell {...args} />,
+  render: () => (
+    <AppShellFixture context="workspace" search={<ShellSearch label={WORKSPACE_SEARCH} />}>
+      <ChatPage />
+    </AppShellFixture>
+  ),
   play: async ({ canvas, userEvent }) => {
-    const column = await canvas.findByRole("complementary", {
-      name: "Hauptnavigation",
-    });
+    const column = await canvas.findByRole("complementary", { name: "Verlauf" });
     const handle = await canvas.findByRole("separator", {
-      name: "Breite der Navigation ändern",
+      name: "Breite des Verlaufs ändern",
     });
     const main = await canvas.findByRole("main");
 
-    // Definierter Startwert, egal was eine frühere Story im gemeinsamen
-    // `storyStorage` hinterlassen hat: `Home` ist das angekündigte Minimum.
+    // Definierter Startwert, egal was vorher gezogen wurde: `Home` ist das
+    // angekündigte Minimum.
     handle.focus();
     await userEvent.keyboard("{Home}");
 
