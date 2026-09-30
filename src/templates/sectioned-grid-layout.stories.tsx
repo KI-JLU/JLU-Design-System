@@ -2,18 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { composeStories } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 import { useState, type ReactNode } from "react";
-import {
-  BookOpen,
-  LayoutDashboard,
-  LogOut,
-  Plus,
-  Search,
-  Settings,
-  Star,
-  User,
-  Users,
-} from "lucide-react";
-import { AppShellLayout } from "./app-shell-layout";
+import { BookOpen, Plus, Search, Star, Users } from "lucide-react";
 import {
   SectionedGridLayout,
   type SectionedGridSection,
@@ -21,10 +10,6 @@ import {
 import { Badge } from "../components/badge";
 import { Button } from "../components/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/card";
-import { DropdownMenuItem } from "../components/dropdown-menu";
-import { Logo } from "../components/logo";
-import { NavItem } from "../components/nav-item";
-import { SidebarUserMenu } from "../components/sidebar-user-menu";
 import * as menuItemStories from "../components/menu-item.stories";
 
 // Portable Story: der freiformige Sektions-Body (`body`) ist eine bestehende
@@ -218,60 +203,6 @@ const AllClosed = () => {
  */
 export const AllCollapsed: Story = {
   render: () => <AllClosed />,
-};
-
-/**
- * Der vorgesehene Einsatz: als `children` des `AppShellLayout`. Marke,
- * Seitenlabel, Theme-Umschalter und Nutzermenü gehören dem Shell — dieses
- * Template bringt nur den Inhalt und **kein** zweites `<main>`.
- */
-export const InAppShell: Story = {
-  render: () => (
-    <AppShellLayout
-      logo={<Logo product="RAG" size="sm" />}
-      pageLabel="Sammlungen"
-      // Seit 0.30.0 Pflicht und hier nicht das Thema: der kontrollierte
-      // Zustand der linken Spalte und die Reiter der schmalen Anordnung.
-      leftOpen
-      onLeftOpenChange={() => {}}
-      mobileTabs={[]}
-      activeMobileTab="page"
-      onMobileTabChange={() => {}}
-      mobileTabBarLabel="Bereichswechsel"
-      nav={
-        <>
-          <NavItem active>
-            <LayoutDashboard width="1em" height="1em" aria-hidden />
-            <span>Übersicht</span>
-          </NavItem>
-          <NavItem>
-            <BookOpen width="1em" height="1em" aria-hidden />
-            <span>Sammlungen</span>
-          </NavItem>
-          <NavItem>
-            <Settings width="1em" height="1em" aria-hidden />
-            <span>Einstellungen</span>
-          </NavItem>
-        </>
-      }
-      sidebarFooter={
-        <SidebarUserMenu initials="JL" name="Jane Lehmann" role="Angemeldet">
-          <DropdownMenuItem>
-            <User width="1em" height="1em" aria-hidden />
-            <span>Profil</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <LogOut width="1em" height="1em" aria-hidden />
-            <span>Abmelden</span>
-          </DropdownMenuItem>
-        </SidebarUserMenu>
-      }
-    >
-      {/* Der Seitentitel steht schon in der `pageLabel`-Zeile des Shells —
-          hier trägt das Template nur die Sektionen. */}
-      <Interactive />
-    </AppShellLayout>
-  ),
 };
 
 /**

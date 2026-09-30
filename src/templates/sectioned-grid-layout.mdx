@@ -1,5 +1,6 @@
 import { Meta, Canvas, Controls } from "@storybook/addon-docs/blocks";
 import * as SectionedGridLayoutStories from "./sectioned-grid-layout.stories";
+import * as AppShellLayoutStories from "./app-shell-layout.stories";
 
 <Meta of={SectionedGridLayoutStories} />
 
@@ -131,7 +132,17 @@ Viewport-Kenntnis, und es gibt hier keinen zweiten Breakpoint.
   `motion-reduce:transition-none`; die Zustandsansage macht `aria-expanded`,
   nicht das Icon.
 
-<Canvas of={SectionedGridLayoutStories.InAppShell} />
+### In the shell
+
+The intended use — as `children` of `AppShellLayout` — is shown on the shell's
+own page, not here: `Templates/AppShellLayout` → **Overview** hangs this
+template's `Standard` story into the shared overview shell (brand, nav, user
+menu, central search). Until KI-847 this page had its own `InAppShell` story;
+it was a second hand-built shell with different menu content and no tabs for
+the narrow arrangement (`mobileTabs={[]}` left the nav unreachable below
+`lg`), so it was removed rather than kept in sync.
+
+<Canvas of={AppShellLayoutStories.Overview} />
 
 ## Do's & Don'ts
 
