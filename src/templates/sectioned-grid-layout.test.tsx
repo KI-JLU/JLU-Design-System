@@ -40,7 +40,7 @@ import { SectionedGridLayout, type SectionedGridSection } from "./sectioned-grid
  * 6. **The DOM spec's `compareDocumentPosition` and parent relationship** —
  *    used instead of our class names to state „same grid, create cell first"
  *    and „the free-form body is rendered raw, with no `Grid` around it".
- * 7. **The controlled-component contract** `SidePanel`/`WorkspaceLayout`
+ * 7. **The controlled-component contract** `SidePanel`/`AppShell`
  *    established in this repo: the template owns no state, so a click reports
  *    the requested value and nothing on screen changes until the consumer
  *    re-renders.

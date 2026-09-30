@@ -5,7 +5,7 @@ import { SidebarCard, SidebarSelectionBar } from "./sidebar-card";
 import { SidebarRailItem } from "./sidebar-rail";
 import { SidebarAction } from "./sidebar-action";
 import { UiShapeProvider } from "./ui-shape-provider";
-import { UiShapeToggle } from "./ui-shape-toggle";
+import { useUiShape } from "./ui-shape-context";
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -73,19 +73,42 @@ describe("SidebarCard", () => {
   });
 });
 
-describe("UiShapeProvider + UiShapeToggle", () => {
-  it("defaults to rounded, mirrors to <html>, and remembers the switch", async () => {
-    const { unmount } = render(<UiShapeProvider><UiShapeToggle /></UiShapeProvider>);
-    expect(document.documentElement.dataset.uiShape).toBe("rounded");
-    expect(screen.getByRole("button", { name: "Abgerundet eckig" })).toHaveAttribute("aria-pressed", "true");
+/**
+ * The provider on its own, without a switch component. `UiShapeToggle` was
+ * the switch until it was removed (KI-846); the user-facing control is now
+ * `AppearanceSettings`' Style row (covered in `appearance-settings.test.tsx`).
+ * This probe is the smallest consumer of the context: it prints the shape and
+ * requests `pill`.
+ *
+ * Oracles: the `<html data-ui-shape>` attribute and the `ui-shape`
+ * localStorage key, both documented outputs of the provider that the probe
+ * never writes itself.
+ */
+function ShapeProbe() {
+  const { shape, setShape } = useUiShape();
+  return (
+    <button type="button" onClick={() => setShape("pill")}>
+      {shape}
+    </button>
+  );
+}
 
-    await userEvent.click(screen.getByRole("button", { name: "Pille" }));
+describe("UiShapeProvider", () => {
+  it("defaults to rounded, mirrors to <html>, and remembers the switch", async () => {
+    const { unmount } = render(<UiShapeProvider><ShapeProbe /></UiShapeProvider>);
+    expect(document.documentElement.dataset.uiShape).toBe("rounded");
+    expect(screen.getByRole("button")).toHaveTextContent("rounded");
+
+    await userEvent.click(screen.getByRole("button"));
     expect(document.documentElement.dataset.uiShape).toBe("pill");
     expect(window.localStorage.getItem("ui-shape")).toBe("pill");
     unmount();
 
-    render(<UiShapeProvider><UiShapeToggle /></UiShapeProvider>);
-    expect(screen.getByRole("button", { name: "Pille" })).toHaveAttribute("aria-pressed", "true");
+    // A fresh mount reads the stored choice back.
+    delete document.documentElement.dataset.uiShape;
+    render(<UiShapeProvider><ShapeProbe /></UiShapeProvider>);
+    expect(screen.getByRole("button")).toHaveTextContent("pill");
+    expect(document.documentElement.dataset.uiShape).toBe("pill");
   });
 });
 

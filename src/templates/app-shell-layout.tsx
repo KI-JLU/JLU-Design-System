@@ -18,8 +18,8 @@ import { useIsDesktop } from "../lib/pane-layout";
  * the whole of the breaking change: the column collapses to the 60px rail
  * instead of an 80px icon column, its state is `leftOpen` (open = expanded)
  * instead of `collapsed` (the inverted spelling of the same thing), and the
- * narrow-screen drawer is gone. `Sidebar` is still exported for a standalone
- * nav column; this template no longer builds one.
+ * narrow-screen drawer is gone. (The legacy `Sidebar` itself was removed in
+ * KI-846.)
  *
  * **The collapse control is still forwarded, not re-slotted.** `leftOpen` /
  * `onLeftOpenChange` plus the two toggle labels reach the column's own toggle,
@@ -117,8 +117,8 @@ export interface AppShellLayoutProps
    */
   search?: React.ReactNode;
   /**
-   * Chrome controls at the **right** end of the bar: a `ThemeToggle`, a menu,
-   * several of them, or nothing. The template renders **no** control of its
+   * Chrome controls at the **right** end of the bar: a button that opens the
+   * settings dialog, a menu, several of them, or nothing. The template renders **no** control of its
    * own here — until 0.26.0 it hardcoded a `<ThemeToggle />`, which a consumer
    * could neither move, suppress, localize nor address; deciding what belongs
    * in an app's chrome bar is the app's job, not the template's.
@@ -140,8 +140,8 @@ export interface AppShellLayoutProps
    *
    * **Replaces 0.28.0's `collapsed`, and means the opposite of it** —
    * `leftOpen={true}` is `collapsed={false}`. The name follows `SidePanel`'s
-   * `isOpen` and `WorkspacePane`'s, so the three frames in this library spell
-   * one state one way. Required and controlled, with no `defaultOpen`: a
+   * `isOpen` and `AppShellPanel`'s, so the frames in this library spell one
+   * state one way. Required and controlled, with no `defaultOpen`: a
    * column width is exactly the kind of value an app persists per user, and a
    * default here would be a second truth next to it.
    */
@@ -308,8 +308,8 @@ const AppShellLayout = React.forwardRef<HTMLDivElement, AppShellLayoutProps>(
 
        So the search is on the row's exact centre at every width down to that
        last step. Known limit: the floor is a length, not the content's own
-       minimum — `headerActions` wider than 11rem (a single `ThemeToggle` is
-       102px) is not reserved for and reaches toward the search on a short
+       minimum — `headerActions` wider than 11rem (the former `ThemeToggle`
+       measured 102px) is not reserved for and reaches toward the search on a short
        row. A content-derived floor cannot be expressed here: the label's
        min-content is its full untruncated text, so it would switch
        `truncate` off, and two different content floors would break the

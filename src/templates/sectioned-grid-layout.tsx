@@ -11,7 +11,7 @@ import { headingTag, nextHeadingLevel, type HeadingLevel } from "../lib/heading-
  * The header half of one section — identical for every body shape below.
  *
  * `isOpen`/`onOpenChange` are **consumer state**, like `SidePanel`'s and
- * `WorkspaceLayout`'s: the app owns it (a URL parameter, a context, or
+ * `AppShellLayout`'s columns: the app owns it (a URL parameter, a context, or
  * `localStorage`), this template only arranges what it is told. There is no
  * `defaultOpen`, because a template that remembers anything would be a second
  * truth next to the app's.
@@ -166,8 +166,8 @@ export interface SectionedGridLayoutProps
  * The card grid's collapse is `Grid`'s (`cols` is the desktop count), the
  * title row stacks in `PageHeader`, and the section header row wraps. Nothing
  * in this template renders a structurally different tree per viewport, so it
- * needs no viewport awareness at all — unlike `WorkspaceLayout`, whose
- * arrangement genuinely changes.
+ * needs no viewport awareness at all — unlike `AppShell`, whose arrangement
+ * genuinely changes.
  *
  * **The disclosure, and why it is not an `Accordion`.** The design system has
  * no `Accordion` primitive and this template does not smuggle one in: each

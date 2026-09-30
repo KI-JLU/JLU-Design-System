@@ -8,10 +8,10 @@ Ziel: **ein** einheitliches Look & Feel, konsumiert als Dependency
   Tokens (`--color-primary`, `--color-surface-container-*`, Status-,
   Interaktions-, Elevation-, Typo-/Spacing-/Radius-Tokens), hell + dunkel.
 - **Komponenten**: Button, Card, Input, Label, Dialog, Form-Feld-Primitives,
-  ThemeToggle — shadcn/ui-basiert (Radix + Tailwind 4), ausschließlich über
+  SettingsDialog — shadcn/ui-basiert (Radix + Tailwind 4), ausschließlich über
   semantische Tokens gestylt.
 - **Theming**: `ThemeProvider` (hell / dunkel / system, `data-theme` auf
-  `<html>`), `useTheme`, `ThemeToggle`.
+  `<html>`), `useTheme`, `AppearanceSettings`.
 - **Enforcement**: ESLint-Plugin (`no-hardcoded-colors`, `no-raw-ui-elements`).
 
 Dokumentation & Beispiele: **Storybook** — `npm run storybook`

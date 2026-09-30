@@ -30,8 +30,7 @@ sich in Storybook über die Toolbar für jede Story live umschalten.
 - Das aktive Theme liegt auf `<html data-theme="light|dark">`.
 - Der `ThemeProvider` löst die Nutzerwahl (hell / dunkel / system) auf,
   persistiert sie in `localStorage` („theme“) und folgt bei „system“ live dem
-  OS. Umschalten per `AppearanceSettings`, `<ThemeToggle />` oder
-  `useTheme().setTheme(...)`.
+  OS. Umschalten per `AppearanceSettings` oder `useTheme().setTheme(...)`.
 
 ## Kontrast, Akzentfarbe, Stil — der `AppearanceProvider`
 
@@ -95,7 +94,7 @@ brauchen nichts zu ändern.
 
 **Kontrolliert.** Mit `theme` + `onThemeChange` besitzt die App den Zustand:
 Der Provider liest und schreibt **kein** `localStorage`, hält keine eigene
-Wahl, und `setTheme` (z. B. aus dem `ThemeToggle`) ruft nur `onThemeChange` —
+Wahl, und `setTheme` (z. B. aus `AppearanceSettings`) ruft nur `onThemeChange` —
 die App speist den neuen Wert wieder ein. Aufgelöst („system“ → hell/dunkel)
 und auf `<html data-theme>` geschrieben wird weiterhin vom Provider: Er bleibt
 der einzige Schreiber dieses Attributs — die App darf `data-theme` nicht

@@ -21,23 +21,21 @@ import { SidePanel } from "./side-panel";
  * CSSOM to hand it to React would be a second source for one measurement.
  *
  * TODO: whether a *default* width belongs here at all — rather than making
- * `width` required, as `WorkspacePane` does — is a convenience decision for
- * the shell only; not confirmed with the design-system owner.
+ * `width` required — is a convenience decision for the shell only; not confirmed with the design-system owner.
  */
 const DEFAULT_PANEL_WIDTH = 256;
 
 /**
  * Makes a shell column drag-resizable (0.36.0). Present on an `AppShellPanel`,
  * `AppShell` renders a `ResizeHandle` on that column's content-facing edge —
- * the same composition `WorkspaceLayout` has had since 0.23.1, not a second
- * mechanism.
+ * the same widget a standalone pane uses, not a second mechanism.
  *
  * **One object, all-or-nothing, and that is the point.** As four loose
  * optionals („handle without bounds" — a separator whose `aria-valuemin` /
  * `-valuemax` are missing, i.e. an APG splitter that is not one) would be
  * expressible; here it cannot be. `width` stays separate because it exists
  * without resizing too (it has a default, these have none: bounds are the
- * app's decision, and `WorkspacePane` bakes none in either).
+ * app's decision).
  *
  * **No persistence here.** The consumer stores the number — see the note on
  * `AppShellPanel` — so this carries a callback and no storage key.
@@ -56,7 +54,7 @@ export interface AppShellPanelResize {
 /**
  * One shell column: its content plus the controlled state it shares with the
  * consumer. Both columns have the identical shape, so they are one object type
- * rather than two flat prop lists (the same reason `WorkspacePane` exists).
+ * rather than two flat prop lists.
  *
  * **Controlled, with no `defaultOpen`.** `isOpen` is the app's state — a
  * column width is exactly the kind of thing an app persists per user — and a
@@ -97,7 +95,7 @@ export interface AppShellPanel {
    *
    * The handle appears **only while the column is expanded** (the collapsed
    * rail is a fixed 60px, so a separator there would report a value with no
-   * visible effect — `WorkspaceLayout`'s rule, unchanged) and **only from
+   * visible effect) and **only from
    * `lg` up** (below it the shell shows one area at a time; there is nothing
    * to resize a column against).
    */
@@ -121,24 +119,23 @@ export interface AppShellPanel {
  * | content … footer      | <main> scrolls on its own   | content … footer  |
  * ```
  *
- * **Both side columns are `SidePanel`** (0.30.0) — the same frame
- * `WorkspaceLayout` composes, with its own toggle, its own rail and its
- * `h-16` header row, which is why the two column headers and `topBar` land on
- * one baseline. The collapsed form **is** the 60px rail; a shell that wants
- * icons in it passes `collapsedPreview`. `Sidebar` is no longer what this
- * frame renders — it stays exported for a standalone nav column.
+ * **Both side columns are `SidePanel`** (0.30.0), with its own toggle, its own
+ * rail and its `h-16` header row, which is why the two column headers and
+ * `topBar` land on one baseline. The collapsed form **is** the 60px rail; a
+ * shell that wants icons in it passes `collapsedPreview`. (The legacy 80px
+ * `Sidebar` this frame rendered before 0.30.0 was removed in KI-846.)
  *
  * **Both columns are drag-resizable since 0.36.0** — opt-in, through
  * `AppShellPanel.resize`. Given, the shell composes `SidePanel` +
- * `ResizeHandle` per column, which is what `WorkspaceLayout` has always done;
- * the shell had the panes but not the handles, so an app on `AppShellLayout`
+ * `ResizeHandle` per column; before 0.36.0 the shell had the panes but not the
+ * handles, so an app on `AppShellLayout`
  * could not widen its nav column at all (JustRAG's KB screen, KI-94). Omitted,
  * nothing changes: no separator, no id on the `<aside>`, the 256px default.
  * The width itself stays the consumer's number — this package stores nothing.
  *
- * **Below `lg`: one area at a time plus a `BottomTabBar`**, the arrangement
- * `WorkspaceLayout` already implements, chosen in JS (`useIsDesktop`) for the
- * reason given there: a shown area is not a narrower version of itself — it
+ * **Below `lg`: one area at a time plus a `BottomTabBar`**, chosen in JS
+ * (`useIsDesktop`, `lib/pane-layout.ts`) for the reason given there: a shown
+ * area is not a narrower version of itself — it
  * fills the screen, ignores the collapse state and must lose its collapse
  * control. The consumer declares which tab shows which area (`mobileTabs`) and
  * which tab is current; it writes no breakpoint check.
@@ -164,11 +161,11 @@ export interface AppShellPanel {
  * **One `<main>` per arrangement, never two** — and when a side column is the
  * area on screen below `lg`, there is no `main` landmark at all: the main
  * column is not in the tree, and wrapping a `complementary` in `main` would be
- * a worse lie than its absence. Same rule, same consequence as
- * `WorkspaceLayout` — which since 0.37.0 **is** this component: it renders an
- * `AppShell` without a `topBar`, mapping its `WorkspacePane`s onto
- * `AppShellPanel`s. `mainLabel` and `showRight` are the two props that made
- * that mapping lossless; there is one frame in this library, not two.
+ * a worse lie than its absence. A workspace screen (two side panes around the
+ * main area) is this frame too, through `AppShellLayout` + `rightPanel`;
+ * `mainLabel` and `showRight` (0.37.0) are the props that case needed. The
+ * former `WorkspaceLayout` wrapper was removed in KI-846, so there is one
+ * frame in this library, not two.
  * TODO: that a narrow screen showing a side column has no `main` landmark is a
  * consequence, not a confirmed decision with the design-system owner.
  *
@@ -194,8 +191,8 @@ export interface AppShellProps extends React.HTMLAttributes<HTMLDivElement> {
    * its `isOpen` (default `true`). „Hidden is not collapsed" (0.37.0): an app
    * state that needs the horizontal space must not travel through the user's
    * collapse preference — hiding *by* collapsing leaves the column collapsed
-   * once that state passes, which is the bug `WorkspaceLayout` recorded when
-   * it owned this flag.
+   * once that state passes, which is the bug recorded for workspace screens
+   * before this flag moved here in 0.37.0.
    *
    * **Ignored below `lg`**, deliberately: hiding buys horizontal space, and
    * one area on screen has none to win — a tab whose column refused to appear
@@ -204,8 +201,8 @@ export interface AppShellProps extends React.HTMLAttributes<HTMLDivElement> {
    *
    * TODO: that the flag is ignored below `lg` (a consumer reading only the
    * prop name could expect otherwise), and that there is no symmetric
-   * `showLeft`, are `WorkspaceLayout`'s reasoning moved here with the
-   * arrangement — not confirmed with the design-system owner.
+   * `showLeft`, is reasoning carried over with the arrangement in 0.37.0 —
+   * not confirmed with the design-system owner.
    */
   showRight?: boolean;
   /**
@@ -220,9 +217,9 @@ export interface AppShellProps extends React.HTMLAttributes<HTMLDivElement> {
    * Accessible name of the shell's `<main>` landmark, in **both**
    * arrangements (0.37.0). Optional: a shell whose page content already names
    * itself needs no second name, and every call site written before this
-   * release renders the unchanged `<main>`. A shell that is the whole page —
-   * `WorkspaceLayout`, which is exactly this component without a bar — passes
-   * it, because nothing above it contributes the page's `main` landmark.
+   * release renders the unchanged `<main>`. A shell that is the whole page
+   * passes it, because nothing above it contributes the page's `main`
+   * landmark.
    */
   mainLabel?: string;
   /** Tabs of the narrow-screen bar, each declaring which area it shows. */
@@ -262,7 +259,7 @@ const AppShell = React.forwardRef<HTMLDivElement, AppShellProps>(
     /*
       Ids for the two columns, so a handle's `aria-controls` can name the
       column it resizes (APG splitter). Minted HERE and not inside `SidePanel`,
-      for `WorkspaceLayout`'s reason: this component is the one place that
+      because this component is the one place that
       composes column and handle, so it is the one place that knows both ends
       of the reference. The id lands on the pane ROOT (`SidePanel`'s `<aside>`,
       through its pass-through `id`) — the element carrying the inline width
@@ -317,8 +314,7 @@ const AppShell = React.forwardRef<HTMLDivElement, AppShellProps>(
     );
 
     /*
-      The column's separator, or nothing. Two gates, both `WorkspaceLayout`'s:
-      no `resize` contract → the column is not resizable at all, and a
+      The column's separator, or nothing. Two gates: no `resize` contract → the column is not resizable at all, and a
       collapsed column is the fixed-width rail, where a separator would report
       a value nothing responds to. The third gate — „not below `lg`" — is the
       arrangement itself: the narrow branch below returns before this is
@@ -400,8 +396,8 @@ const AppShell = React.forwardRef<HTMLDivElement, AppShellProps>(
       >
         {/* Column, then its separator: the handle sits on the edge that faces
             the content, which is the right edge of a left column and the left
-            edge of a right one — carried by DOM order, exactly as
-            `WorkspaceLayout` does it, so tab order matches the visual one. */}
+            edge of a right one — carried by DOM order, so tab order matches
+            the visual one. */}
         {left && (
           <>
             {column(left, "left", leftPaneId)}

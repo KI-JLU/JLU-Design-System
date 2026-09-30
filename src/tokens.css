@@ -281,7 +281,13 @@
    * Icon-Button ohne Zeilen-Innenabstand, hier eine vollbreite Zeile. Ein
    * gemeinsames „Chrome-Maß" über AppShell/SidePanel/BottomTabBar/Sidebar wäre
    * das aufgeräumtere System — siehe das TODO in `side-panel-variants.ts`;
-   * das ist eine Eigentümer-Entscheidung und hier nicht getroffen. */
+   * das ist eine Eigentümer-Entscheidung und hier nicht getroffen.
+   *
+   * TODO(KI-846): `--width-sidebar-collapsed` has had no consumer in this
+   * library since the legacy `Sidebar` was removed. It stays because tokens
+   * are published contract, and a consumer may write
+   * `w-(--width-sidebar-collapsed)`. Removing it is an owner decision, not
+   * taken here. `--width-sidebar` is still the `AppShell` default width. */
   --width-sidebar: 16rem;
   --width-sidebar-collapsed: 5rem;
 

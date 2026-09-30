@@ -86,8 +86,7 @@ afterEach(() => {
 const LEFT_WIDTH = 311;
 const RIGHT_WIDTH = 233;
 // Bounds likewise: this file's numbers, never the component's (it has none —
-// `AppShellPanelResize` bakes in no defaults, exactly as `WorkspacePane` does
-// not).
+// `AppShellPanelResize` bakes in no defaults).
 const LEFT_MIN = 180;
 const LEFT_MAX = 540;
 const RIGHT_MIN = 160;
@@ -375,8 +374,7 @@ describe("AppShell — desktop arrangement", () => {
 
 /**
  * Resizable columns (0.36.0). The shell composes `SidePanel` + `ResizeHandle`
- * per column, the composition `WorkspaceLayout` has had since 0.23.1 — so what
- * is under test here is the **wiring**, not the widget: which numbers reach
+ * per column — so what is under test here is the **wiring**, not the widget: which numbers reach
  * the separator, which element its `aria-controls` names, which `side` it is
  * handed, and in which states it exists at all. `ResizeHandle`'s own behaviour
  * (clamping, the pointer drag, Home/End) is asserted in
@@ -527,9 +525,9 @@ describe("AppShell — resizable columns", () => {
 });
 
 /**
- * `mainLabel` and `showRight` (0.37.0) — the two additive props that made
- * `WorkspaceLayout` expressible as a call to this component, so the library
- * has one frame instead of two.
+ * `mainLabel` and `showRight` (0.37.0) — the two additive props that made the
+ * former `WorkspaceLayout` (removed in KI-846) expressible as a call to this
+ * component, so the library has one frame instead of two.
  *
  * Oracles, both outside the code under test:
  *
@@ -538,13 +536,14 @@ describe("AppShell — resizable columns", () => {
  *   `main` landmark's name from `aria-label` per the ARIA in HTML mapping.
  *   Nothing here reads a class, and the unnamed case is asserted as the
  *   *absence* of the attribute, so „named" cannot pass by accident.
- * - **„Hidden is not collapsed"**, `WorkspaceLayout`'s documented rule since
- *   0.23.1 and asserted against that template in `workspace-layout.test.tsx`
- *   (which this component now renders): hiding must not travel through the
- *   consumer's `isOpen`, and must be ignored below `lg`, where one area fills
- *   the screen and a tab whose column refused to appear would be dead. It is
- *   an external contract here — written for, and still checked against, a
- *   different call site.
+ * - **„Hidden is not collapsed"**, the rule documented for workspace screens
+ *   since 0.23.1 and moved to this frame in 0.37.0: hiding must not travel
+ *   through the consumer's `isOpen`, and must be ignored below `lg`, where one
+ *   area fills the screen and a tab whose column refused to appear would be
+ *   dead. It was written before this implementation existed, which is what
+ *   keeps it an external contract here. Until KI-846 it was also checked
+ *   against `WorkspaceLayout`; that template is removed, so this suite is now
+ *   its only check.
  */
 describe("AppShell — mainLabel (0.37.0)", () => {
   it.each([
@@ -727,7 +726,7 @@ describe("AppShell — narrow-screen arrangement", () => {
     // The bar is `fixed` and one chrome unit tall — the same exported constant
     // the collapsed rail uses, which is why the reservation is that constant
     // and not a second literal 60. Only the px part is asserted: jsdom's CSS
-    // parser garbles the nested `env()` (see workspace-layout.test.tsx).
+    // parser garbles the nested `env()`.
     expect(screen.getByRole("main").getAttribute("style")).toContain(
       `${SIDE_PANEL_RAIL_WIDTH}px`,
     );
@@ -747,7 +746,7 @@ describe("AppShell — viewport switch", () => {
     stubViewport(true);
     renderShell();
     // `--breakpoint-lg: 64rem` in Tailwind's theme — the boundary the `lg:`
-    // utilities in this library use, and the one `WorkspaceLayout` asks for.
+    // utilities in this library use.
     expect(askedQueries).toContain("(min-width: 64rem)");
   });
 

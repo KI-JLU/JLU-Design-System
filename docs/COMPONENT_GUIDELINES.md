@@ -95,7 +95,7 @@ yet, open a card" instead of guessing a counterpart.
 | `--radius` → `rounded-sm` / `rounded-md` | `rounded-action` (buttons, nav rows) · `rounded-field` (Input/Textarea) · `rounded-xl` (cards, popovers, menus) | `--radius-action`, `--radius-field`, `--radius-xl`. **Silent-divergence trap:** `rounded-md`/`rounded-sm` *compile* — `--radius-md: .375rem` and `--radius-sm: .25rem` come from Tailwind's own default theme, verified in the built CSS, **not** from `src/tokens.css`, which defines only `--radius-DEFAULT`, `-lg`, `-xl`, `-full`, `-action`, `-field`. A leftover `rounded-md` therefore looks fine and is not a token. (shadcn centres its radii on a single `--radius`; the exact derivation depends on the CLI version — read the diff, don't assume.) |
 | `--chart-1` … `--chart-4` → `fill-chart-1`, `stroke-chart-2`, `bg-chart-3` | same names | `--color-chart-1` … `--color-chart-4`. Names coincide; values are ours and lighten in dark. We additionally have `chart-track` (donut/bar backgrounds), which shadcn has no equivalent for. |
 | `--chart-5` | **none — no token yet, open a card** | Our series ramp stops at 4. A 5th series needs a primitive + a light *and* dark value through DESIGN_SYSTEM.md §6 — do not reuse `chart-track` (it is a background, not a series) and do not add a hex. |
-| `--sidebar` → `bg-sidebar` | `bg-surface-container-lowest` | **No `sidebar-*` tokens exist, deliberately.** Our [`sidebar.tsx`](../src/components/sidebar.tsx) uses the ordinary surface vocabulary. |
+| `--sidebar` → `bg-sidebar` | `bg-surface-container-lowest` | **No `sidebar-*` tokens exist, deliberately.** Our [`SidePanel`](../src/components/side-panel-variants.ts) uses the ordinary surface vocabulary. |
 | `--sidebar-foreground` | `text-on-surface` | `--color-on-surface`. |
 | `--sidebar-primary` / `--sidebar-primary-foreground` | `bg-primary` / `text-on-primary` | `--color-primary` / `--color-on-primary`. This is the active top-level row in [`nav-item-variants.ts`](../src/components/nav-item-variants.ts). |
 | `--sidebar-accent` / `--sidebar-accent-foreground` | `bg-secondary-container` / `text-on-secondary-container` | `--color-secondary-container` / `--color-on-secondary-container`. NavItem's hover and its active *sub*-level row. |
@@ -394,15 +394,17 @@ import { AppShellLayout, DashboardLayout, Grid, Stack } from "@ki4jlu/design-sys
 ```
 
 - **Use the templates** (`AppShellLayout`, `AuthLayout`, `DashboardLayout`,
-  `FormLayout`, `ChatLayout`, `TableLayout`, `WorkspaceLayout`,
-  `SectionedGridLayout`) for their page category — never rebuild a page skeleton in the app. Missing slot/variant?
+  `FormLayout`, `ChatLayout`, `TableLayout`, `SectionedGridLayout`) for their
+  page category — never rebuild a page skeleton in the app. Missing slot/variant?
   Extend the template in the design system (owner review), don't fork the
   layout.
-- **Three-pane workspaces** (side pane | content | side pane, one pane at a
-  time on narrow screens) are `WorkspaceLayout`: pass the panes' `isOpen` /
-  `width` and the current mobile tab in as controlled props — never a
-  breakpoint check or a pane frame of your own. Hiding a pane goes through
-  `showRight`, never through its collapse state.
+- **Three-pane workspaces** (side pane | content | side pane, one area at a
+  time on narrow screens) are `AppShellLayout` with a `rightPanel`: pass each
+  column's open state and width and the current mobile tab in as controlled
+  props — never a breakpoint check or a pane frame of your own. Hiding the
+  right column goes through `showRight`, never through its collapse state.
+  (`WorkspaceLayout`, the standalone wrapper for this case, was removed in
+  KI-846.)
 - **The shell's nav column is `AppShellLayout`'s `leftOpen` /
   `onLeftOpenChange` (0.30.0), and the state lives in the app.** Hold it where
   the app already holds user preferences (context, URL, `localStorage`) and
@@ -420,37 +422,20 @@ import { AppShellLayout, DashboardLayout, Grid, Stack } from "@ki4jlu/design-sys
   shows which area is data. There is no drawer and no burger button any more.
   A second column on the right is `rightPanel` (an `AppShellPanel`, the same
   shape `AppShell.left`/`.right` take). Do not compose `AppShell` +
-  `SidePanel` by hand to get any of this. **`Sidebar` is still exported** —
-  unchanged, with `collapsed`/`onCollapsedChange` — but only for a standalone
-  nav column outside the shell; every row that should collapse there still
-  needs a `label` on its `NavItem`.
-- **`WorkspaceLayout` is standalone — never a child of `AppShellLayout`.** It
-  owns the page and its panes *are* the page's chrome, so nesting it
-  in the shell puts the shell's nav column next to the left pane: two chrome
-  columns on one screen. Render it as the whole page, inside a frame that has a
-  height (`h-dvh`), and put app navigation into its left pane; it contributes
-  the page's `<main>` itself, named by its required `mainLabel`.
-
-  **Since 0.37.0 it IS an `AppShell` — without a `topBar`.** The open question
-  from 0.30.0 („should this become a thin case of the shell?") is answered and
-  implemented: 0.36.0 gave `AppShell` the resize contract
-  (`AppShellPanel.resize`), which was the last thing it lacked, and 0.37.0
-  added the two remaining props (`mainLabel`, `showRight`). `WorkspaceLayout`'s
-  body is now a mapping — `WorkspacePane` → `AppShellPanel`, the four resize
-  values into one `resize` object, no bar — and it composes no `SidePanel`,
-  `ResizeHandle` or `BottomTabBar` of its own. One frame, one set of
-  arrangement rules, one place where an accessibility fix lands.
-
-  **The standalone rule did not weaken with it — it got sharper.** Nesting is
-  now literally two `AppShell`s: two chrome column sets and two `<main>`
-  candidates on one screen. The export and `WorkspacePane` stay, because they
-  name the *case* (a workspace screen: two resizable panes, no chrome bar),
-  which is worth a name even when it is one call to the frame underneath.
-- **`SectionedGridLayout` is the opposite case — it *is* an `AppShellLayout`
-  child.** It is page content, hung in as `children`, and keeps its own
-  `<section aria-label>` inside the shell's single `<main>`. The dividing
-  question between the two is whether a template brings the chrome (standalone)
-  or fills a slot (shell child) — not how big it is.
+  `SidePanel` by hand to get any of this. Every nav row that should collapse
+  into the rail needs a `label` on its `NavItem`. (The legacy standalone
+  `Sidebar` was removed in KI-846; there is no nav column outside the
+  shell any more.)
+- **`AppShellLayout` brings the chrome; every other app-page template is its
+  child.** `SectionedGridLayout`, `DashboardLayout`, `FormLayout`,
+  `TableLayout` and `ChatLayout` are page content, hung in as `children`, and
+  keep their own `<section aria-label>` inside the shell's single `<main>`.
+  The dividing question for a new template is whether it brings the chrome or
+  fills a slot — not how big it is. Until KI-846 `WorkspaceLayout` was the
+  one standalone, chrome-owning exception; since 0.37.0 it was only an
+  `AppShell` without a bar, and it was removed in favour of
+  `AppShellLayout` with a `rightPanel`. (`AuthLayout` stays outside the
+  shell: sign-in pages carry no app chrome.)
 - **Overview pages of grouped card collections** are `SectionedGridLayout`:
   pass `sections` (each with `isOpen`/`onOpenChange` as controlled props) and
   hang the template into `AppShellLayout` as `children`. Per section the body
@@ -518,8 +503,8 @@ fresh WCAG 1.3.1 failure created by using the library as documented.
    contradict each other. Two independent hardcoded levels was the bug.
 4. **A template with no `title` prop contributes no heading, and its text slots
    are not the page heading.** `AppShellLayout.pageLabel` is a chrome location
-   label and stays a `<p>`; `ChatLayout.header` and `WorkspaceLayout`'s panes
-   are free-form slots. The page heading belongs to the content template hung
+   label and stays a `<p>`; `ChatLayout.header` and the shell's side columns
+   (`rightPanel`) are free-form slots. The page heading belongs to the content template hung
    inside the shell, or to the call site. An `<h1>` in the shell's page-label
    bar would sit next to the one every content template already renders.
    **A slot in a chrome bar inherits that rule** — `AppShellLayout.headerActions`
@@ -562,7 +547,6 @@ additive everywhere.
 | `AuthLayout` | **no heading** — `title` is styled text in `CardTitle` | **omitted** by default; set it to opt in |
 | `AppShellLayout` | no heading (`pageLabel` is a `<p>`; optional since 0.29.0, and omitted it renders no element at all) | none — no `title` prop |
 | `ChatLayout` | no heading | none — no `title` prop |
-| `WorkspaceLayout` | no heading | none — no `title` prop |
 
 `AuthLayout` is the one template whose default looks like it contradicts part 1
 of the rule, and the reason is a real call site rather than a preference: a
@@ -608,7 +592,8 @@ component means adding the utility in the same commit.
 
 - The active theme is on `<html data-theme="light|dark">`, set by
   [`ThemeProvider`](../src/theme/ThemeContext.tsx) and a no-flash script in
-  `index.html`. Users switch it with [`ThemeToggle`](../src/components/theme-toggle.tsx).
+  `index.html`. Users switch it in the settings window (next point); the
+  standalone `ThemeToggle` was removed in KI-846.
 - Contrast, accent colour and Style sit beside it on `<html data-contrast
   data-accent data-ui-shape>`, held by `AppearanceProvider`. A settings window
   offers all four with [`AppearanceSettings`](../src/components/appearance-settings.tsx)

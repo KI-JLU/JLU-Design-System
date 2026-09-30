@@ -115,10 +115,10 @@ export {
   type SegmentedControlOption,
   type SegmentedControlProps,
 } from "./components/segmented-control";
-export { Sidebar, type SidebarProps } from "./components/sidebar";
-// The read side of the collapsed state, for a consumer's own header/footer
-// node. The context objects themselves stay internal: writing them would let
-// an app claim a sidebar is collapsed while its width says otherwise.
+// The read side of the collapsed state `SidePanel` publishes, for a consumer's
+// own header/footer node. The context object itself stays internal: writing
+// it would let an app claim a column is collapsed while its width says
+// otherwise.
 export { useSidebarCollapsed } from "./components/sidebar-context";
 export {
   SidebarUserMenu,
@@ -151,7 +151,6 @@ export {
   TabsContent,
 } from "./components/tabs";
 export { Textarea, type TextareaProps } from "./components/textarea";
-export { ThemeToggle, type ThemeToggleProps } from "./components/theme-toggle";
 /** App-wide appearance: Style (rounded / pill), contrast, accent colour. */
 export {
   AppearanceProvider,
@@ -171,7 +170,6 @@ export {
 } from "./components/appearance-context";
 export { AccentSwatch, type AccentSwatchProps } from "./components/accent-swatch";
 export { useUiShape, type UiShape, type UiShapeContextValue } from "./components/ui-shape-context";
-export { UiShapeToggle, type UiShapeToggleProps } from "./components/ui-shape-toggle";
 /** Side-panel building blocks: row card, selection bar, collapsed rail. */
 export {
   SidebarCard,
@@ -254,19 +252,12 @@ export {
   type SectionedGridSectionBody,
 } from "./templates/sectioned-grid-layout";
 export { TableLayout, type TableLayoutProps } from "./templates/table-layout";
-export {
-  WorkspaceLayout,
-  type WorkspaceLayoutProps,
-  type WorkspacePane,
-  type WorkspacePaneId,
-  type WorkspaceMobileTab,
-} from "./templates/workspace-layout";
 export { cn } from "./lib/utils";
 /**
- * The two shapes the responsive frames share (`AppShell`, `WorkspaceLayout`):
- * which of the three areas a narrow-screen tab shows, and a tab that declares
- * one. `WorkspacePaneId` / `WorkspaceMobileTab` are aliases of these and stay
- * exported for the call sites that already import them.
+ * The two shapes the responsive frame (`AppShell`, and `AppShellLayout` on
+ * top of it) uses below `lg`: which of the three areas a narrow-screen tab
+ * shows, and a tab that declares one. They replace the removed
+ * `WorkspacePaneId` / `WorkspaceMobileTab` aliases one-to-one.
  */
 export { type PaneId, type MobilePaneTab } from "./lib/pane-layout";
 /**
@@ -278,7 +269,7 @@ export { type HeadingLevel } from "./lib/heading-level";
 /**
  * Opt-in persistence for a column width (0.36.0): the piece a consumer plugs
  * into `AppShellLayout.leftWidth` + `leftResize.onWidthChange` (or any
- * `AppShellPanel` / `WorkspacePane`) so the user's size survives a reload, per
+ * `AppShellPanel`) so the user's size survives a reload, per
  * device. The components stay controlled — this is not a default inside them.
  */
 export {

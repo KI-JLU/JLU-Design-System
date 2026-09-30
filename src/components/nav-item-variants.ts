@@ -8,7 +8,7 @@ import { cva } from "class-variance-authority";
  * Note: the active top-level row deliberately switches to the label font
  * (font-label-sm) — that is the app's established look, kept 1:1.
  *
- * `collapsed` is the icon-only form a `Sidebar` puts its rows into. It hides
+ * `collapsed` is the icon-only form a collapsed `SidePanel` puts its rows into. It hides
  * every **element** child that is not an `<svg>` and centers what is left, so
  * the row keeps its own `px-4`/`py-3` (and therefore its hit target and its
  * pill shape) at the narrower column width. Two consequences worth knowing:
