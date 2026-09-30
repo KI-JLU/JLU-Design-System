@@ -86,7 +86,7 @@ keins ein. Jede Sektion ist eine **Disclosure** (ARIA/APG) aus Button + Panel:
   APG warnt ab ~6 Panels ausdrücklich vor Landmark-Wucherung. Dieses Template
   liefert genau **ein** Landmark, sein eigenes `<section aria-label>`.
 
-Der Zustand liegt bei der App — wie bei `SidePanel` und `WorkspaceLayout`. Es
+Der Zustand liegt bei der App — wie bei `SidePanel` und `AppShellLayout`. Es
 gibt **kein** `defaultOpen`: ein Template, das sich etwas merkt, wäre eine
 zweite Wahrheit neben dem App-Zustand. Wer die Sektionen persistieren will
 (die Vorlage tut das per `localStorage`), tut das in der App und gibt das
@@ -104,7 +104,7 @@ Alles CSS, **kein** `matchMedia`:
 - **Sektions-Kopfzeile**: `flex-wrap`, die `headerAction` rutscht bei Bedarf in
   die nächste Zeile.
 
-Anders als `WorkspaceLayout` rendert dieses Template an keiner Stelle einen
+Anders als `AppShell` rendert dieses Template an keiner Stelle einen
 strukturell anderen Baum pro Viewport — es braucht deshalb keine
 Viewport-Kenntnis, und es gibt hier keinen zweiten Breakpoint.
 
@@ -113,7 +113,7 @@ Viewport-Kenntnis, und es gibt hier keinen zweiten Breakpoint.
 - Ein Landmark: `region`, benannt über `label`.
 - **Kein zweites `<main>`.** Das Template steckt in `AppShellLayout`, dessen
   `children` schon in einem `<main>` liegen — die eigene Region ist ein
-  `<section aria-label>`. **Anders als `WorkspaceLayout`:** das ist die ganze
+  `<section aria-label>`. **Anders als `AppShellLayout`:** das ist die ganze
   Seite (es bringt seine Chrome selbst mit und rendert deshalb ein eigenes
   `<main>`), dieses Template hier ist Seiten-*Inhalt* und füllt einen Slot der
   Shell.

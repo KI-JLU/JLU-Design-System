@@ -71,7 +71,8 @@ export interface FilterChipsProps
    * Accessible name of the „+" chip. Required with `onAdd`: the chip is
    * icon-only, so without it the button has no name at all. Deliberately not
    * defaulted to a German string — every other label here comes from the
-   * consumer, and a hidden default is the bug `ThemeToggle` had.
+   * consumer, and a hidden default is the bug the since-removed `ThemeToggle`
+   * had.
    */
   addLabel?: string;
 }

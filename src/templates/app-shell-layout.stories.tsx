@@ -841,8 +841,8 @@ export const CollapsedRailKeepsVerticalPositions: Story = {
 /**
  * **Seit 0.36.0: beide Spalten sind ziehbar** — hier im Workspace-Kontext,
  * dem, in dem beide Spalten es sind. Die Shell komponiert dafür `SidePanel` +
- * `ResizeHandle` — genau die Komposition, die `WorkspaceLayout` seit 0.23.1
- * hat; es gibt keinen zweiten Mechanismus und keine Speicherung im Paket. Die
+ * `ResizeHandle`; es gibt keinen zweiten Mechanismus und keine Speicherung im
+ * Paket. Die
  * Breiten sind **Zustand der App**: `onWidthChange` liefert jeden geklemmten
  * Wert, die App reicht ihn über `leftWidth` bzw. `rightPanel.width` zurück.
  *

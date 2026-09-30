@@ -50,8 +50,9 @@ component with a different fill; the shared story fixture that renders them is
 - **Colour scheme, contrast, accent and Style are not in the bar.** They live
   behind the user menu: „Einstellungen" opens a `SettingsDialog` whose
   „Darstellung" section is `AppearanceSettings` (KI-850). The `Overview`
-  story walks that route in its `play` function. No story on this page mounts
-  a `ThemeToggle`.
+  story walks that route in its `play` function. The in-bar `ThemeToggle`
+  was removed in KI-846; theme, contrast, accent and Style are switched only
+  in that settings section.
 - **Page content is a content template**, hung in as `children` — the shell
   brings the chrome and the one `<main>`, the template brings the page's
   heading:
@@ -295,8 +296,7 @@ const [rightWidth, setRightWidth] = usePersistedWidth("myapp.kb.rightWidth", {
 </AppShellLayout>
 ```
 
-- **It is the same `ResizeHandle` `WorkspaceLayout` composes** — no second
-  mechanism. Until 0.35.0 the shell had the columns but no handles: an app on
+- **It is the library's one `ResizeHandle`** — no second mechanism. Until 0.35.0 the shell had the columns but no handles: an app on
   `AppShellLayout` could not widen its navigation column at all (JustRAG's
   knowledge-base view, KI-94).
 - **`resize` is an object, all or nothing.** As four loose optionals „handle
@@ -424,9 +424,11 @@ import { usePersistedWidth } from "@ki4jlu/design-system";
 - ✅ Hang page content in as a **content** template (`SectionedGridLayout`,
   `DashboardLayout`, `FormLayout`, `TableLayout`, `ChatLayout`) or a
   `ChatStage`.
-- ❌ **Not** every template fits: `WorkspaceLayout` is standalone and owns the
-  whole viewport — nested, the screen shows two chrome columns and two
-  `<main>`s. The inventory in DESIGN_SYSTEM.md §4 decides.
+- ❌ **Not** every template fits: `AuthLayout` stands outside the shell (sign-in
+  pages carry no app chrome), and a frame that brings its own chrome must not
+  be nested here, or the screen shows two chrome column sets and two
+  `<main>`s. A workspace screen is this template with a `rightPanel`, not a
+  nested frame. The inventory in DESIGN_SYSTEM.md §4 decides.
 - ✅ `headerActions` and `search` take **chrome**: search, small tools, a
   menu. No page content, no forms, no business logic.
 - ❌ **No heading in `headerActions` or `search`.** Both are chrome positions

@@ -7,14 +7,13 @@ import { DashboardLayout } from "./dashboard-layout";
 import { FormLayout } from "./form-layout";
 import { SectionedGridLayout, type SectionedGridSection } from "./sectioned-grid-layout";
 import { TableLayout } from "./table-layout";
-import { WorkspaceLayout } from "./workspace-layout";
 import { PageHeader } from "../components/page-header";
-import { ThemeToggle } from "../components/theme-toggle";
+import { Button } from "../components/button";
 import { ThemeProvider } from "../theme/ThemeContext";
 
 /**
  * „Who owns the page heading" — the rule in `docs/COMPONENT_GUIDELINES.md`,
- * asserted once for all eight templates instead of per file, because the point
+ * asserted once for all seven templates instead of per file, because the point
  * of the rule is that it is **one** rule.
  *
  * Oracles, all of them outside the code under test:
@@ -37,8 +36,8 @@ import { ThemeProvider } from "../theme/ThemeContext";
  *    `AuthLayout`, whose title is deliberately *not* a heading by default.
  *
  * `matchMedia` is stubbed for `ThemeProvider` (it reads
- * `prefers-color-scheme`) and for `WorkspaceLayout` / `AppShell` (they read
- * `--breakpoint-lg`); jsdom implements neither. `matches` answers the
+ * `prefers-color-scheme`) and for `AppShell` (it reads `--breakpoint-lg`);
+ * jsdom implements neither. `matches` answers the
  * *viewport* query only, so `prefers-color-scheme` still resolves to „no"
  * while a shell renders its wide arrangement.
  */
@@ -58,12 +57,12 @@ const SHELL_PROPS = {
   mobileTabBarLabel: "Bereichswechsel",
 };
 
-function stubMatchMedia(matches = false) {
+function stubMatchMedia() {
   vi.stubGlobal(
     "matchMedia",
     (query: string) =>
       ({
-        matches: matches || query === "(min-width: 64rem)",
+        matches: query === "(min-width: 64rem)",
         media: query,
         onchange: null,
         addEventListener: () => {},
@@ -165,7 +164,7 @@ describe("the page-heading rule — defaults every consumer already ships agains
         <AppShellLayout
           {...SHELL_PROPS}
           pageLabel="Dashboard"
-          headerActions={<ThemeToggle />}
+          headerActions={<Button variant="ghost">Settings</Button>}
         >
           Inhalt
         </AppShellLayout>
@@ -175,7 +174,7 @@ describe("the page-heading rule — defaults every consumer already ships agains
     // not a route around the rule: the template still contributes no heading,
     // so the content template hung in as `children` keeps the only <h1>.
     expect(screen.queryAllByRole("heading")).toHaveLength(0);
-    expect(screen.getByRole("group", { name: "Farbschema" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
   });
 
   it("AppShellLayout contributes no heading WITHOUT a pageLabel either — the vacancy is not an invitation", () => {
@@ -187,14 +186,17 @@ describe("the page-heading rule — defaults every consumer already ships agains
     // JustRAG shape that asked for the optional label.
     render(
       <ThemeProvider>
-        <AppShellLayout {...SHELL_PROPS} headerActions={<ThemeToggle />}>
+        <AppShellLayout
+          {...SHELL_PROPS}
+          headerActions={<Button variant="ghost">Settings</Button>}
+        >
           <PageHeader title="Wissensbasen" />
         </AppShellLayout>
       </ThemeProvider>,
     );
     expect(outline()).toEqual(["1: Wissensbasen"]);
     // …and the bar still holds its chrome, unchanged.
-    expect(screen.getByRole("group", { name: "Farbschema" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
   });
 
   it("ChatLayout contributes no heading — its header is a free-form slot", () => {
@@ -206,21 +208,6 @@ describe("the page-heading rule — defaults every consumer already ships agains
     expect(screen.queryAllByRole("heading")).toHaveLength(0);
   });
 
-  it("WorkspaceLayout contributes no heading", () => {
-    stubMatchMedia(true);
-    render(
-      <WorkspaceLayout
-        mainLabel="Arbeitsfläche"
-        mobileTabs={[{ id: "main", label: "Chat", icon: null, pane: "main" }]}
-        activeMobileTab="main"
-        onMobileTabChange={() => {}}
-        mobileTabBarLabel="Bereiche"
-      >
-        Inhalt
-      </WorkspaceLayout>,
-    );
-    expect(screen.queryAllByRole("heading")).toHaveLength(0);
-  });
 });
 
 describe("the page-heading rule — headingLevel is the call site's decision", () => {

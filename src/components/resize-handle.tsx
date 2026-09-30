@@ -44,8 +44,8 @@ import { resizeHandleVariants } from "./resize-handle-variants";
  * pane's *size*, and the two references stay distinct). Rendered as
  * `aria-controls`, which the APG splitter requires on the separator. The prop
  * is optional so a standalone handle stays usable, but without it the widget
- * is not fully APG-conformant — composed in `WorkspaceLayout` it is always
- * set. With `controls`, the pattern is complete: role, focusability,
+ * is not fully APG-conformant — composed by `AppShell` (a column with
+ * `AppShellPanel.resize`) it is always set. With `controls`, the pattern is complete: role, focusability,
  * `aria-valuemin`/`-max`/`-now`, label, stated orientation, the required
  * directional arrow keys, plus optional Home/End; of the pattern's optional
  * keys only Enter (collapse — `SidePanel`'s visible button owns that) and F6

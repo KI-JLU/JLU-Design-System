@@ -4,11 +4,11 @@ import userEvent from "@testing-library/user-event";
 import { useState, type ComponentProps, type ReactNode } from "react";
 import { Home, LayoutDashboard } from "lucide-react";
 import { AppShellLayout } from "./app-shell-layout";
+import { Button } from "../components/button";
 import { DropdownMenuItem } from "../components/dropdown-menu";
 import { Input } from "../components/input";
 import { NavItem } from "../components/nav-item";
 import { SidebarUserMenu } from "../components/sidebar-user-menu";
-import { ThemeToggle } from "../components/theme-toggle";
 import { ThemeProvider } from "../theme/ThemeContext";
 import type { MobilePaneTab } from "../lib/pane-layout";
 
@@ -30,18 +30,19 @@ import type { MobilePaneTab } from "../lib/pane-layout";
  *    *Where* the centre region sits on the screen is measured in Chromium by
  *    `app-shell-layout.stories.tsx` (`WithCenteredSearch`), because jsdom
  *    applies no stylesheet and every box is 0×0.
- * 3. **`ThemeToggle`'s own published defaults** — „Farbschema", „Helles
- *    Design", „Systemdesign", „Dunkles Design" (DESIGN_SYSTEM.md §4, asserted
- *    independently in `theme-toggle.test.tsx`). They are the contract of a
- *    *different* component, which is what makes them usable here as the
- *    fingerprint of „the template mounted a toggle".
+ * 3. **The bar's own accessibility tree** for „the template mounted a
+ *    control": with `headerActions` empty, the `banner` holds no `button` and
+ *    no `group` at all. Until KI-846 the fingerprint was `ThemeToggle`'s
+ *    German default names. That component is removed, and „no control in the
+ *    bar" is the stronger statement anyway: it catches any control, not just
+ *    one.
  * 4. **`SidePanel`'s disclosure contract** (`aria-expanded` + `aria-controls`)
  *    and **React's controlled-component contract**: the column re-renders only
  *    from the `leftOpen` it is given, so the round trip below goes through
  *    consumer state.
  * 5. **The two shipped call sites** (JustRAG `AppChrome.tsx`, CampusAgents
- *    `AppLayout.tsx`, both read 2026-09-17), which is why the labelled bar and
- *    the German toggle defaults are re-asserted next to the new behaviour.
+ *    `AppLayout.tsx`, both read 2026-09-17), which is why the labelled bar is
+ *    re-asserted next to the new behaviour.
  *
  * jsdom implements neither `matchMedia` (which `useIsDesktop` and
  * `ThemeProvider` both ask) nor layout, so the viewport is stubbed per test.
@@ -101,13 +102,6 @@ function precedes(a: Element, b: Element): boolean {
   return Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 }
 
-const GERMAN_DEFAULT_NAMES = [
-  "Farbschema",
-  "Helles Design",
-  "Systemdesign",
-  "Dunkles Design",
-];
-
 function renderWithActions(headerActions?: ReactNode) {
   return render(
     <ThemeProvider>
@@ -132,11 +126,9 @@ function renderWithActions(headerActions?: ReactNode) {
 describe("AppShellLayout — the chrome bar's actions region", () => {
   it("renders NO control of its own when the slot is empty (BREAKING, 0.26.0)", () => {
     renderWithActions();
-    expect(screen.getByText("Dashboard")).toBeInTheDocument();
-    for (const name of GERMAN_DEFAULT_NAMES) {
-      expect(screen.queryByRole("group", { name })).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name })).not.toBeInTheDocument();
-    }
+    expect(within(bar()).getByText("Dashboard")).toBeInTheDocument();
+    expect(within(bar()).queryAllByRole("button")).toHaveLength(0);
+    expect(within(bar()).queryAllByRole("group")).toHaveLength(0);
   });
 
   it("no longer needs a ThemeProvider of its own", () => {
@@ -151,44 +143,32 @@ describe("AppShellLayout — the chrome bar's actions region", () => {
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
   });
 
-  it("holds a ThemeToggle the consumer passes — the migration path", () => {
-    renderWithActions(<ThemeToggle />);
-    expect(screen.getByRole("group", { name: "Farbschema" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Dunkles Design" })).toBeInTheDocument();
+  /*
+    The migration path since KI-846: the theme (and contrast, accent, Style)
+    is switched in the settings window's `AppearanceSettings` section, and
+    the bar carries the control that opens it. The slot passes the
+    consumer's element through untouched, `id` included, so a consumer can
+    point `aria-controls` or a skip link at it.
+  */
+  it("holds the control the consumer passes, as given", () => {
+    renderWithActions(
+      <Button variant="ghost" id="app-settings-trigger">
+        Settings
+      </Button>,
+    );
+    const trigger = within(bar()).getByRole("button", { name: "Settings" });
+    expect(document.getElementById("app-settings-trigger")).toBe(trigger);
   });
 
-  it("holds several controls at once — search field and toggle", () => {
+  it("holds several controls at once — search field and settings button", () => {
     renderWithActions(
       <>
         <Input type="search" aria-label="Suche" />
-        <ThemeToggle />
+        <Button variant="ghost">Settings</Button>
       </>,
     );
-    expect(screen.getByRole("searchbox", { name: "Suche" })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Farbschema" })).toBeInTheDocument();
-  });
-
-  it("a toggle in the slot can be fully localized — no German label survives", () => {
-    renderWithActions(
-      <ThemeToggle
-        id="app-theme-toggle"
-        themeLabel="Colour scheme"
-        lightLabel="Light"
-        systemLabel="System"
-        darkLabel="Dark"
-      />,
-    );
-    expect(screen.getByRole("group", { name: "Colour scheme" })).toBeInTheDocument();
-    for (const name of ["Light", "System", "Dark"]) {
-      expect(screen.getByRole("button", { name })).toBeInTheDocument();
-    }
-    for (const name of GERMAN_DEFAULT_NAMES) {
-      expect(screen.queryByRole("group", { name })).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name })).not.toBeInTheDocument();
-    }
-    expect(document.getElementById("app-theme-toggle")).toBe(
-      screen.getByRole("group", { name: "Colour scheme" }),
-    );
+    expect(within(bar()).getByRole("searchbox", { name: "Suche" })).toBeInTheDocument();
+    expect(within(bar()).getByRole("button", { name: "Settings" })).toBeInTheDocument();
   });
 });
 

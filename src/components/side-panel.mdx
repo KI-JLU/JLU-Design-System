@@ -45,7 +45,7 @@ wird das von der **DOM-Reihenfolge** (nicht von einer `order-*`-Utility), damit
 Tab-Reihenfolge und Vorlesereihenfolge dem Bild entsprechen.
 
 Die Zeile ist `h-16` hoch — dieselbe Chrome-Einheit wie die Leiste von
-`AppShellLayout` und die Kopfzeile von `Sidebar`, so dass linke Kopfzeile,
+`AppShellLayout`, so dass linke Kopfzeile,
 Hauptspalten-Leiste und rechte Kopfzeile auf einer Linie liegen. Die Höhe hängt
 an der Zeile, nicht am Knopf, also verschiebt ein höherer `header`-Knoten
 nichts.
@@ -65,8 +65,7 @@ Beide Knöpfe sind dasselbe Bedienelement in zwei Positionen und deshalb gleich
 groß — der Ausklapp-Knopf in der 60px-Schiene trägt dieselben 32px, sonst
 spränge er beim Einklappen. Die Einrückung ist bewusst **nicht** mehr die der
 Leiste von `AppShellLayout` (die bleibt bei `px-gutter`, 24px, für ihren
-eigenen Inhalt); `Sidebar`s Kopfzeile dagegen benutzte `px-4` schon vorher, die
-beiden Spaltenköpfe stimmen jetzt also überein. In Chromium gemessen von
+eigenen Inhalt). In Chromium gemessen von
 `SidePanel` → `ToggleAlignsWithBodyControl`, dessen Erwartung aus dem Rechteck
 des Rumpf-Bedienelements selbst kommt und nicht aus einer getippten Zahl.
 
@@ -119,8 +118,8 @@ ausgeklappten Zustand rendert, sieht den Ausklapp-Knopf nie.
   entgegengesetzt, und mit Absicht: ein Leisten-Rumpf hält Scrollposition und
   halb getippte Eingaben, eine Kopfzeile ist Chrome ohne Zustand, und von der
   Chrome bleibt in der Schiene nur der Ausklapp-Knopf — neben
-  `collapsedPreview` und dem angehefteten `footer`. Dieselbe Regel wie bei
-  `Sidebar.header`. Zustandsbehaftetes gehört deshalb in `children`, nicht in
+  `collapsedPreview` und dem angehefteten `footer`. Zustandsbehaftetes gehört
+  deshalb in `children`, nicht in
   `header`.
 - **Inhalt bleibt montiert.** Zugeklappt trägt der Rumpf das `hidden`-Attribut
   (und `display:none`): Scrollposition und halb getippte Eingaben überleben das
@@ -156,5 +155,4 @@ ausgeklappten Zustand rendert, sieht den Ausklapp-Knopf nie.
 - ❌ Kein zustandsbehaftetes UI in `header` (es wird beim Einklappen ausgehängt).
 - ❌ Keine Viewport-Logik hier erwarten: ob auf schmalen Bildschirmen überhaupt
   eine Leiste erscheint (üblich: eine Ansicht plus `BottomTabBar`), entscheidet
-  das komponierende Template (`WorkspaceLayout`, seit 0.30.0 auch `AppShell`) —
-  genau wie Positionierung und Viewport-Verhalten bei `Sidebar`.
+  das komponierende Template (`AppShell`).

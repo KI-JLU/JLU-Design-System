@@ -57,7 +57,7 @@ export interface ThemeProviderProps {
   theme?: Theme;
   /**
    * Called with the requested theme whenever `setTheme` is invoked (e.g. by
-   * `ThemeToggle`) — in controlled mode this is the only effect of `setTheme`;
+   * `AppearanceSettings`) — in controlled mode this is the only effect of `setTheme`;
    * in uncontrolled mode it fires in addition to the internal update.
    */
   onThemeChange?: (theme: Theme) => void;

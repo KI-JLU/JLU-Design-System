@@ -13,8 +13,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
  * a <button> is rendered (pass type="button" in forms). Styling is complete —
  * consumers add no skin classes (className is for layout exceptions only).
  *
- * **Collapsing.** Inside a collapsed `Sidebar` a row that was given a `label`
- * renders icon-only: the text is hidden, `aria-label` keeps the accessible
+ * **Collapsing.** Inside a collapsed `SidePanel` (the rail) a row that was
+ * given a `label` renders icon-only: the text is hidden, `aria-label` keeps the accessible
  * name, and a `Tooltip` gives sighted pointer/keyboard users the same text
  * back. Rows without a `label` are left exactly as they are — the row cannot
  * invent a name it was not told, and silently dropping a label would be the
@@ -23,12 +23,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 export interface NavItemProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     // `collapsed` is deliberately not a consumer prop: it comes from the
-    // surrounding Sidebar, so one column cannot end up half collapsed.
+    // surrounding SidePanel, so one column cannot end up half collapsed.
     Omit<VariantProps<typeof navItemVariants>, "collapsed"> {
   asChild?: boolean;
   /**
    * The row's text, as a plain string — the accessible name and the tooltip
-   * text while the surrounding `Sidebar` is collapsed. **Required for a row to
+   * text while the surrounding `SidePanel` is collapsed. **Required for a row to
    * collapse**; without it the row keeps rendering its children at full width.
    *
    * Pass the same text you render as children, and render that text inside an

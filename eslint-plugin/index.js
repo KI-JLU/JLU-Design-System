@@ -127,7 +127,6 @@ const DS_CONTROLS = [
   "NavItem",
   "Switch",
   "SegmentedControl",
-  "ThemeToggle",
   "CodeBlock",
 ];
 

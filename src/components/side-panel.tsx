@@ -36,8 +36,8 @@ import { SidebarCollapsedContext } from "./sidebar-context";
  *
  * **The pane publishes its collapsed state** on `SidebarCollapsedContext`, so
  * `NavItem` and `SidebarUserMenu` hung into `children`/`footer` shrink to their
- * icon form in the rail without being told twice. Before 0.30.0 only `Sidebar`
- * provided it, which is why a nav column moved onto this frame rendered
+ * icon form in the rail without being told twice. Before 0.30.0 only the
+ * legacy `Sidebar` (removed in KI-846) provided it, which is why a nav column moved onto this frame rendered
  * full-width labels inside a 60px rail.
  *
  * While collapsed the pane shrinks to a `SIDE_PANEL_RAIL_WIDTH` rail showing
@@ -53,9 +53,8 @@ import { SidebarCollapsedContext } from "./sidebar-context";
  *
  * Viewport behaviour is **not** here. Deciding whether a pane is shown at all
  * on a narrow screen — typically one pane at a time plus a `BottomTabBar` —
- * belongs to the composing template (`WorkspaceLayout`, and since 0.30.0
- * `AppShell`, which share `useIsDesktop` in `lib/pane-layout.ts`), so the same
- * frame works in every one of those places.
+ * belongs to the composing frame (`AppShell`, which reads `useIsDesktop` from
+ * `lib/pane-layout.ts`), so the same pane works wherever it is composed.
  */
 export interface SidePanelProps extends React.HTMLAttributes<HTMLElement> {
   /** Which edge the pane sits on — drives the border edge and the chevron direction. */
@@ -74,8 +73,7 @@ export interface SidePanelProps extends React.HTMLAttributes<HTMLElement> {
    * Brand/title node rendered in the toggle row while expanded (a pane title,
    * a logo, a small action pair). Hidden while collapsed — of the chrome only
    * the expand button survives there, beside `collapsedPreview` and the pinned
-   * `footer`, exactly as `Sidebar.header` is dropped from the collapsed
-   * column. Pass a node that can shrink (`className="truncate"` on a title):
+   * `footer`. Pass a node that can shrink (`className="truncate"` on a title):
    * the slot is `min-w-0`, so a long title clips instead of pushing the toggle
    * off the row.
    */
@@ -264,8 +262,8 @@ const SidePanel = React.forwardRef<HTMLElement, SidePanelProps>(
           className={cn("min-h-0 flex-1 flex-col", isOpen ? "flex" : "hidden")}
         >
           {/*
-            One fixed-height chrome row, `h-16` like `AppShellLayout`'s bar and
-            `Sidebar`'s header row, so the left pane's header, the main
+            One fixed-height chrome row, `h-16` like `AppShellLayout`'s bar, so
+            the left pane's header, the main
             column's bar and the right pane's header sit on one baseline. The
             height is on the row, not derived from the button, so it does not
             change when a taller or shorter `header` node is passed. (The
@@ -282,8 +280,7 @@ const SidePanel = React.forwardRef<HTMLElement, SidePanelProps>(
             sat at 24 + 18 = 42px, i.e. 10px off that line — visible on
             JustRAG's KB screen, where the pane's first body row carries such a
             control. `px-4` + the toggle's `p-1.5` put both centres on 32px.
-            `Sidebar`'s header row (`sidebar.tsx`) already used `px-4`, so the
-            two column headers now agree as well. Measured in Chromium by
+            Measured in Chromium by
             `SidePanel` → `ToggleAlignsWithBodyControl`, whose expectation is
             read off the body control's own rect.
           */}
@@ -295,8 +292,7 @@ const SidePanel = React.forwardRef<HTMLElement, SidePanelProps>(
                 screen reader's reading order match what is on screen, which a
                 purely visual `order-*` utility would break. */}
             {side === "right" && collapseToggle}
-            {/* Wrapped rather than spread into the row, like `Sidebar`'s brand
-                slot: a multi-node header keeps the row's gap, and `min-w-0`
+            {/* Wrapped rather than spread into the row: a multi-node header keeps the row's gap, and `min-w-0`
                 lets a `truncate`d title clip instead of pushing the toggle out
                 of the row. */}
             {/* Unmounted while collapsed, not just hidden — the opposite of
@@ -304,8 +300,7 @@ const SidePanel = React.forwardRef<HTMLElement, SidePanelProps>(
                 pane body holds scroll position and half-typed input; a header
                 is chrome (a title, a logo), it has nothing to lose, and the
                 collapsed rail carries no title — only the expand button,
-                `collapsedPreview` and the pinned `footer`. Same rule as
-                `Sidebar.header`. */}
+                `collapsedPreview` and the pinned `footer`. */}
             {isOpen && header && (
               <span className="flex min-w-0 flex-1 items-center gap-stack-sm">
                 {header}

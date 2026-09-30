@@ -5,12 +5,11 @@ import { SIDE_PANEL_RAIL_WIDTH } from "../components/side-panel-variants";
 /**
  * The one responsive arrangement rule this library has, in one place.
  *
- * Two frames need it — `WorkspaceLayout` (three workspace panes) and
- * `AppShell` (left nav column, main column, right pane). They ask the same
- * question at the same boundary and answer it the same way ("one area at a
- * time plus a `BottomTabBar` below `lg`"), so the hook, the breakpoint and the
- * two data shapes live here rather than in two copies that could drift apart —
- * a second `matchMedia` boundary in this package would be a second answer to
+ * `AppShell` (left nav column, main column, right pane) answers it: "one area
+ * at a time plus a `BottomTabBar` below `lg`". Until KI-846 a second frame,
+ * `WorkspaceLayout`, asked the same question, which is why the hook, the
+ * breakpoint and the two data shapes live here and not inside `AppShell`. A
+ * second `matchMedia` boundary in this package would be a second answer to
  * "when is this a desktop".
  */
 

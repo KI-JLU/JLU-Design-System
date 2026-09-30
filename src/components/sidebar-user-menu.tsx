@@ -17,9 +17,10 @@ import { useSidebarCollapsed } from "./sidebar-context";
  * The menu items are the `children` (DropdownMenuItems) — this component owns
  * the trigger and the popup frame, the app owns the actions and their routing.
  *
- * **Collapsed.** In a collapsed `Sidebar` the trigger shrinks to the avatar
- * alone (a round icon-sized button), and the chevron goes — at 80px there is
- * room for the circle and nothing else. The menu is *kept*, not hidden: it is
+ * **Collapsed.** In a collapsed column (a `SidePanel` rail, which publishes
+ * `SidebarCollapsedContext`) the trigger shrinks to the avatar alone (a round
+ * icon-sized button), and the chevron goes — at 60px there is room for the
+ * circle and nothing else. The menu is *kept*, not hidden: it is
  * the only route to sign-out, and a control that disappears when the column
  * narrows would make collapsing lossy. Name and role stay in the DOM as
  * `sr-only`, so the trigger's accessible name is the **same string in both
