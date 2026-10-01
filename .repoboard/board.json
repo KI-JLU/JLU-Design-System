@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "columns": [
+    "Todo",
+    "In Progress",
+    "Review",
+    "Done"
+  ],
+  "milestones": [],
+  "cards": [
+    {
+      "id": "e3a9a310-23ea-4cc3-a8a4-5a73253659dc",
+      "number": 1,
+      "column": "Todo",
+      "position": 0,
+      "title": "Feat: asdkjhfgöjlas",
+      "description": null,
+      "assignee": null,
+      "dueDate": null,
+      "checklist": [],
+      "labels": [],
+      "branches": [],
+      "pullRequests": [],
+      "issues": [],
+      "priority": 0,
+      "milestone": null,
+      "markdownTaskId": null,
+      "updatedAt": 1790860734517,
+      "deletedAt": null
+    }
+  ],
+  "board": {
+    "name": "Main board",
+    "description": null,
+    "color": null,
+    "art": null,
+    "owner": null,
+    "updatedAt": 0
+  },
+  "boards": [],
+  "activity": [
+    {
+      "id": "976576fe-6cd0-40a3-8b5c-e334ce60f2aa",
+      "type": "card_created",
+      "message": "created Feat: asdkjhfgöjlas",
+      "taskId": "e3a9a310-23ea-4cc3-a8a4-5a73253659dc",
+      "actor": "KI4JLU",
+      "actorKind": "person",
+      "at": 1790860734517
+    },
+    {
+      "id": "13b716ab-50d0-4488-a527-ef8a17cea132",
+      "type": "repo_connected",
+      "message": "connected KI-JLU/JLU-Design-System",
+      "taskId": null,
+      "actor": "KI4JLU",
+      "actorKind": "person",
+      "at": 1790860509799
+    },
+    {
+      "id": "e3834edc-bccb-4bf7-8857-a6a3b095b468",
+      "type": "board_created",
+      "message": "created the board for KI-JLU/JLU-Design-System",
+      "taskId": null,
+      "actor": "KI4JLU",
+      "actorKind": "person",
+      "at": 1790860509798
+    }
+  ]
+}
