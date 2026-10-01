@@ -185,7 +185,7 @@ consuming repo** — new exceptions get the same scrutiny there.
 | `SidebarCard` (+ `SidebarCardList`, `SidebarSelectionBar`) | `sidebar-card.tsx` | **0.42.0.** Side-panel row card: icon tile (glyph, emoji or type label), one-line title, meta lines, extra controls, checkbox, actions menu; whole-card click; selection mode for batch actions. Pill shape tightens padding and falls back to `rounded-2xl` with meta lines |
 | `SidebarRail` / `SidebarRailItem` | `sidebar-rail.tsx` | **0.42.0.** The collapsed 60px rail's entries: tinted tile, primary on hover/active, `muted`, `iconText`, `variant="action"` for the leading button; wrap in Tooltip/HoverCard for the full title |
 | `SidebarScrollArea` / `useScrollbarGutter` / `useScrollFade` | `sidebar-scroll-area.tsx` / `lib/use-scrollbar-gutter.ts` / `lib/use-scroll-fade.ts` | **0.43.0.** A side panel's scrolling list: content fades out (24px mask) at an edge with more to scroll instead of a hard crop; the scrollbar is moved into the right gutter (padding = gutter − measured bar width, 0 for overlay bars), so cards keep the width of the controls above whether a bar shows or not. The hook works on any scroller (e.g. a `SidebarCardList` that scrolls itself) |
-| `SidebarPanel` | `sidebar-panel.tsx` | **0.43.0.** One frame for both side columns: fixed head (title row + `head`, then optional `nav` rows) and the list that alone scrolls (`SidebarScrollArea`). With no `title`, `head` or `nav` there is no head, and the list carries the 16px top inset (`pt-4`) itself, so a nav-only column's first row sits on the collapsed rail's line (**Unreleased (KI-852) — set the version at release**; measurements in its Changelog entry). `AppShellLayout` drops its nav padding around it, so left and right columns share insets and heading baseline by construction |
+| `SidebarPanel` | `sidebar-panel.tsx` | **0.43.0.** One frame for both side columns: fixed head (title row + `head`, then optional `nav` rows) and the list that alone scrolls (`SidebarScrollArea`). With no `title`, `head` or `nav` there is no head, and the list carries the 16px top inset (`pt-4`) itself, so a nav-only column's first row sits on the collapsed rail's line (**0.45.0**; measurements in its Changelog entry). `AppShellLayout` drops its nav padding around it, so left and right columns share insets and heading baseline by construction |
 | `SidebarAction` | `sidebar-action.tsx` | **0.43.0.** A side panel's primary action row ("Neuer Chat"): full width, label left-aligned, icon in a 28px slot on the same axis as the SidebarCards' tiles (`sidebarRowInsetX`); 44px, radius follows the Style |
 | `ActionMenu` | `action-menu.tsx` | **0.43.0.** The ⋮ overflow menu of a card or list row (`actions: ActionMenuItem[]`, `label`); SidebarCard's menu and the app's topic cards. A clickable host ignores clicks from `[role=menu]`/`[role=menuitem]` and buttons |
 | `categoryColor` | `lib/category-color.ts` | **0.44.0.** Stable colour for a category key: `var(--color-category-1..9)` (tokens.css palette). Pass it as `FilterChipsOption.color` — leading dot, active chip tinted in it |
@@ -193,7 +193,7 @@ consuming repo** — new exceptions get the same scrutiny there.
 | `ChatStage` | `chat-stage.tsx` | **0.43.0.** The column of a full-page chat: content (messages or empty state), `composer`, and a `footer` (disclaimer, `footerId`) pinned to the bottom. `empty` centres content + composer together (auto margins, a tall empty state scrolls instead of clipping); with messages the content fills and the composer docks. Deliberately no layout animation. The card-framed widget stays `ChatLayout` |
 | `PromptSuggestions` | `prompt-suggestions.tsx` | **0.43.0.** Starter prompts beneath the composer of an empty chat: a header (icon, headline, previous/next stepping one suggestion while the row overflows, optional close that fades it out with its space kept, then calls `onDismiss`) over every suggestion in one row, scrolling sideways and faded at the edges (`useScrollFade({ axis: "x" })`); `onSelect` gets the trimmed text; `revealDelay` fades the whole component in after a pause, its space kept meanwhile; radius follows the Style (`--ui-radius-control`) |
 | `SettingsDialog` / `SettingsRow` | `settings-dialog.tsx` | **0.43.0.** The settings window: left column (search, one `NavItem` per section), close top-right like every Dialog, the section on the right under its title; search filters by label and `keywords`. `SettingsRow` = label + description left, control right, rule below. Radius follows the app-wide Style |
-| `AppearanceSettings` (+ `AppearanceSettingsLabels`) | `appearance-settings.tsx` | **Unreleased (KI-850) — set the version at release.** The appearance rows of a settings section, as `SettingsRow`s in a fragment (no wrapper, so they mix with an app's own rows): colour scheme (`useTheme`), contrast (`useContrast`), accent colour (`useAccent`, each option with an `AccentSwatch`) and Style (`useUiShape`), each a DS `Select` named by its row label (`aria-labelledby`) and described by its row description. No state of its own — a choice calls the provider's setter, which persists it and writes `<html data-theme / data-contrast / data-accent / data-ui-shape>`. Needs a `ThemeProvider` (`useTheme` throws without one); without an `AppearanceProvider` the three other rows are read-only defaults. Every string is overridable via `labels` (German defaults). Language and app-specific switches stay in the app |
+| `AppearanceSettings` (+ `AppearanceSettingsLabels`) | `appearance-settings.tsx` | **0.45.0.** The appearance rows of a settings section, as `SettingsRow`s in a fragment (no wrapper, so they mix with an app's own rows): colour scheme (`useTheme`), contrast (`useContrast`), accent colour (`useAccent`, each option with an `AccentSwatch`) and Style (`useUiShape`), each a DS `Select` named by its row label (`aria-labelledby`) and described by its row description. No state of its own — a choice calls the provider's setter, which persists it and writes `<html data-theme / data-contrast / data-accent / data-ui-shape>`. Needs a `ThemeProvider` (`useTheme` throws without one); without an `AppearanceProvider` the three other rows are read-only defaults. Every string is overridable via `labels` (German defaults). Language and app-specific switches stay in the app |
 | `ContentPanel` / `PanelSection` | `content-panel.tsx` | **0.42.0.** A panel that replaces a content area (header + close, scrolling body capped at 880px, pinned footer) and its titled, rule-divided sections |
 | `CodeBlock` | `code-block.tsx` | fixed-dark code viewer (identical in both themes, `code-surface` tokens) with built-in copy button (clipboard write + Copy→Check confirmation for ~2 s) |
 | `Input` (+ shared `fieldVariants`) | `input.tsx` / `field-variants.ts` | honors `aria-invalid` styling; `variant`: default (framed) / inline (borderless in-flow field for in-row editing) |
@@ -507,7 +507,43 @@ consumer. Not done yet because it needs an account action nobody has taken:
 Until then the git path carries us; keep the README's git section first.
 
 ### Changelog
-- **Unreleased (KI-852) — set the version at release.** **Fix: a head-less
+- **0.45.0** — **One `AppShellLayout` for every app view; theme and Style
+  move into the settings dialog. BREAKING** (four exports removed, see the
+  KI-846 entry below). The 0.45.0 entries:
+
+  - **Feature (KI-850): `AppearanceSettings`.** The appearance rows of a
+    settings section (colour scheme, contrast, accent, Style), wired to
+    `ThemeProvider` / `AppearanceProvider`, labels overridable with German
+    defaults. `SidebarUserMenu → OpensSettings` shows the flow:
+    "Einstellungen" opens `SettingsDialog` with the section mounted. New
+    MDX pages for `SettingsDialog` and `SidebarUserMenu`. `Theming.mdx`
+    covers all four appearance settings, and the Storybook toolbar now
+    switches contrast, accent and Style next to the theme. Additive.
+    Known gap: focus does not return to the opener when the dialog closes
+    (since 0.43.0, tracked separately).
+  - **Stories (KI-847): one shell fixture per app context.** The three
+    hand-built shells in the stories are replaced by one fixture,
+    `src/test/fixtures/app-shell.tsx`, which is not shipped. It mirrors
+    JLURAG's two real shell configurations, overview and KB workspace.
+    `Templates/AppShellLayout` shows one story per context (`Overview`,
+    `ChatWorkspace`, `TablePage`, `FormPage`, `Mobile`), each filling
+    `search`, the standard fill of the bar's centre. The mechanism stories
+    run on the same fixture. `Layout/AppShell` is reduced to one
+    `Reference` story, and `SectionedGridLayout/InAppShell` is removed. No
+    component change.
+  - **Breaking (KI-846)** and **Fix (KI-852)**: see the next two entries.
+  - **Docs (KI-845).** Each shell rule has one home (§4), and version
+    history is out of the live MDX pages. `LegalPageDark` and
+    `DefaultWidthDark` are removed, because the theme toolbar shows dark
+    mode. A `storySort` puts Einführung first. The docs-language rule is in
+    §6: English for new and rewritten pages.
+  - **For consumers raising their pin.** JLURAG's `SidebarNav` (a bare
+    `SidebarPanel`) moves its expanded nav rows up 12px, onto the rail's
+    line. JLURAG's `ThemeContext.test.tsx` imports `ThemeToggle` and has to
+    move onto `AppearanceSettings`. CampusAgents is unaffected (pinned
+    `^0.22.0`, and it uses none of the removed exports).
+
+- **0.45.0** (KI-852) — **Fix: a head-less
   `SidebarPanel` no longer shifts its rows 12px on collapse.** A panel with no
   `title`, `head` or `nav` (JLURAG's `SidebarNav`: the nav rows in a bare
   `SidebarPanel`) still rendered its head box, empty, with the head's
@@ -527,7 +563,7 @@ Until then the git path carries us; keep the README's git section first.
   CollapsedRailKeepsVerticalPositions` measures the `SidebarPanel` frame
   again, where KI-847 had to fall back to bare rows.
 
-- **Unreleased (KI-846) — set the version at release.** **BREAKING:
+- **0.45.0** (KI-846) — **BREAKING:
   `ThemeToggle`, `UiShapeToggle`, the legacy `Sidebar` and `WorkspaceLayout`
   are removed.** Closes KI-801 (the collapsed `ThemeToggle`), which is moot
   with the component gone. Owner go-ahead recorded 2026-09-28.
@@ -626,8 +662,8 @@ Until then the git path carries us; keep the README's git section first.
   `WorkspaceLayout`'s arrangement rules were already asserted on `AppShell`
   (`app-shell.test.tsx`), which it rendered.
 
-  *Version.* Breaking, but 0.x, so it is a minor (as in 0.26.0 and 0.30.0).
-  The `package.json` bump happens in the batch's release commit, not here.
+  *Version.* Breaking, but 0.x, so it is a minor (as in 0.26.0 and 0.30.0):
+  0.45.0.
 
 - **0.44.1** — **Fix: on a short `AppShellLayout` bar the search gives way
   before the label** (KI-842). Until 0.44.0 the centre `search` region kept

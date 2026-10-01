@@ -1,6 +1,6 @@
 {
   "name": "@ki4jlu/design-system",
-  "version": "0.44.1",
+  "version": "0.45.0",
   "description": "JLU design system: design tokens, light/dark theming, and shared React UI components for JLU projects — consumed as a dependency for a unified look and feel.",
   "type": "module",
   "license": "UNLICENSED",
