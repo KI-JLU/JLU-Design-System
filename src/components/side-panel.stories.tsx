@@ -178,22 +178,19 @@ export const CollapsedWithoutPreview: Story = {
 };
 
 /**
- * **Geometrie der Kopfzeile (0.39.0): der Umschalter steht auf dem ersten
- * Bedienelement des Rumpfs.** Die Zeile ist `px-4` (16px) eingerückt und der
- * Knopf 32px breit (`p-1.5` + 20px-Icon), sein Mittelpunkt liegt also 32px von
- * der Kante der Leiste. Ein `p-4`-gepolsterter Rumpf — so polstert
- * `AppShellLayout` seine Navigation — setzt ein 32px-Bedienelement am
- * nachlaufenden Rand seiner ersten Zeile auf denselben Mittelpunkt: 16px
- * Polsterung + 16px halbe Breite. Bis 0.38.0 waren es `px-gutter` (24px) und
- * ein 36px-Knopf, also 42px, und die beiden verfehlten sich um 10px.
+ * **Header-row geometry: the toggle sits on the body's first control.** The
+ * row is inset `px-4` (16px) and the button is 32px wide (`p-1.5` + a 20px
+ * icon), so its centre is 32px from the column's edge. A `p-4`-padded body
+ * (how `AppShellLayout` pads its navigation) puts a 32px control at the
+ * trailing end of its first row on the same centre: 16px padding + 16px half
+ * width. (The 10px miss this fixed: Changelog, 0.39.0.)
  *
- * **Das Orakel ist das Rechteck des Rumpf-Bedienelements, keine Zahl im
- * Test.** Die `play`-Funktion misst beide Mittelpunkte im selben
- * Browser-Layout und vergleicht sie miteinander — würde jemand `px-4` gegen
- * ein anderes Maß tauschen oder den Knopf wieder auf `p-2` stellen, fällt der
- * Vergleich. Nur die Breite des Knopfes (32px) und die Polsterung der Zeile
- * (16px) sind zusätzlich als Zahl festgehalten, weil sonst zwei gemeinsam
- * verschobene Maße gültig aussähen.
+ * **The oracle is the body control's rectangle, not a number in the test.**
+ * The `play` function measures both centres in the same browser layout and
+ * compares them: swapping `px-4` for another measure, or setting the button
+ * back to `p-2`, fails the comparison. Only the button's width (32px) and the
+ * row's padding (16px) are also pinned as numbers, because otherwise two
+ * measures moved together would look valid.
  */
 export const ToggleAlignsWithBodyControl: Story = {
   args: {
@@ -219,13 +216,12 @@ export const ToggleAlignsWithBodyControl: Story = {
     const bodyControl = await canvas.findByTestId("body-control");
     const glyph = toggle.querySelector("svg") as SVGSVGElement;
 
-    // Die eigentliche Zusicherung (0.41.0): die GEZEICHNETE Außenkante des
-    // Symbols liegt auf der Außenkante des gefüllten Knopfs darunter — das
-    // ist, was das Auge bei einem Ghost-Knopf ohne sichtbaren Kasten als
-    // Bündigkeit liest. Nicht die svg-Box: lucide zeichnet 3..21 von 24, also
-    // 2,5px innerhalb der 20px-Box, und genau dieser Rest war in 0.40.0 als
-    // Stufe sichtbar. Die gezeichnete Kante kommt aus `getBBox()` (Nutzer-
-    // einheiten), skaliert auf die gerenderte Box.
+    // The actual assertion: the DRAWN outer edge of the glyph lies on the
+    // outer edge of the filled button below it. That is what the eye reads as
+    // flush on a ghost button with no visible box. Not the svg box: lucide
+    // draws 3..21 of 24, i.e. 2.5px inside the 20px box, and that remainder
+    // is exactly the step that used to show. The drawn edge comes from
+    // `getBBox()` (user units), scaled to the rendered box.
     const box = glyph.getBoundingClientRect();
     const bbox = glyph.getBBox();
     const scale = box.width / glyph.viewBox.baseVal.width;

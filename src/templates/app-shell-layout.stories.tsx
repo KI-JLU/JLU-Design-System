@@ -15,7 +15,7 @@ import * as sectionedGridStories from "./sectioned-grid-layout.stories";
 import * as tableStories from "./table-layout.stories";
 
 /* ---------------------------------------------------------------------------
- * One shell, adapted per context (KI-847). Every story below renders the
+ * One shell, adapted per context. Every story below renders the
  * shared `AppShellFixture` (`src/test/fixtures/app-shell.tsx`) in one of the
  * two contexts of the reference consumer — `overview` (JLURAG `AppChrome.tsx`)
  * or `workspace` (JLURAG `KbWorkspaceLayout.tsx`) — and every story fills the
@@ -26,7 +26,7 @@ import * as tableStories from "./table-layout.stories";
  *
  * No story mounts a theme toggle: colour scheme, contrast, accent and Style
  * live behind the user menu's „Einstellungen" (`SettingsDialog` +
- * `AppearanceSettings`, KI-850), which `Overview` walks through.
+ * `AppearanceSettings`), which `Overview` walks through.
  * ------------------------------------------------------------------------- */
 
 // Portable Stories: page content is the content templates' own stories —
@@ -171,8 +171,7 @@ const page = (canvasElement: HTMLElement) => within(canvasElement.ownerDocument.
  *    toasts against, not a number read from the component];
  * 2. the column stands left of `<main>` [the layout engine's boxes];
  * 3. the field is centred on the bar with no label beside it, and the bar
- *    renders no label element at all [the bar's own box; the DOM] — until
- *    KI-847 the story `WithCenteredSearchOnly`;
+ *    renders no label element at all [the bar's own box; the DOM];
  * 4. „Einstellungen" in the user menu opens the settings window on its
  *    „Darstellung" section, and it closes again [ARIA roles and names:
  *    `menuitem`, `dialog`, `heading` level 2, `combobox`] — the route that
@@ -226,8 +225,7 @@ export const Overview: Story = {
  * `play` (Chromium, the runner's 1280px window, both columns at their 320px
  * default), oracles in brackets:
  * 1. the bar is 64px [the published contract, as above];
- * 2. history | main | sources, left to right [the layout boxes] — until
- *    KI-847 the story `WithRightPanel`;
+ * 2. history | main | sources, left to right [the layout boxes];
  * 3. each column has its named separator [ARIA `separator` + name];
  * 4. the bar's four controls do not overlap or clip, and the field sits on
  *    the bar's centre [the boxes against each other and against the bar] —
@@ -363,27 +361,16 @@ const viewOptions = (
 );
 
 /**
- * **Seit 0.30.0: `search` ist die Mitte der Zeile** — und zwar die Mitte der
- * *Zeile*, nicht die Mitte der Fläche, die das Label übrig lässt. Genau das
- * war mit dem `mx-auto`-Rezept von 0.29.0 nicht erreichbar: dort sprang das
- * Feld seitwärts, sobald ein Label da war (oder sich seine Länge änderte).
+ * **`search` is the centre of the bar**: the centre of the *bar*, not of
+ * the space the label leaves, so the field does not move when a label
+ * appears or changes length.
  *
- * Die `play`-Funktion misst es in Chromium: Feldmitte = Zeilenmitte, obwohl
- * links ein Label und rechts ein Bedienelement unterschiedlich breit sind.
- *
- * **Gemessen für 0.30.0** (Chromium, 1280px-Fenster) — die Zahlen stehen hier
- * als Beleg jenes Releases, nicht als aktuelle Behauptung: Zeile 256–1200 →
- * Mitte **728**, Feld 504–952 → Mitte **728** (448px breit, das ist
- * `max-w-md`), Label 296–421,4 (125,4px breit), damals ein Theme-Umschalter
- * 1058–1160 (102px breit). Die beiden Ränder waren also um 23px verschieden
- * breit, die Mitte stimmte trotzdem auf den Pixel.
- *
- * **Seit 0.37.0** beginnt das Label bei 256 + 24 = **280** (Einrückung
- * `px-gutter`, siehe `BarInsetIsTheColumnGutter`); die Mitte hängt an den zwei
- * gleich breiten Randregionen, nicht an der Einrückung. **Seit KI-847** steht
- * rechts statt des Theme-Umschalters ein 36px-Icon-Knopf — der Unterschied der
- * beiden Ränder ist damit größer, nicht kleiner, und die Prüfung unten
- * verlangt ihn weiterhin.
+ * The `play` function measures it in Chromium: field centre = bar centre,
+ * although the label on the left and the icon button on the right differ in
+ * width. The check requires that difference, so the story cannot pass on two
+ * equal sides. The centring rests on the two equal-width side regions, not
+ * on the bar's inset (`BarInsetIsTheColumnGutter`). The release measurement
+ * is in the Changelog, 0.30.0.
  */
 export const WithCenteredSearch: Story = {
   render: () => (
@@ -449,30 +436,26 @@ export const WithoutPageLabelOrActions: Story = {
 };
 
 /* ------------------------------------------------------------------------ */
-/* 0.44.1 (KI-842): the search gives way before the side regions            */
+/* Short bar: the search gives way before the side regions                 */
 /* ------------------------------------------------------------------------ */
 
 /** Both side columns at the measured 320px (also the workspace default). */
 const COLUMN_WIDTH = 320;
 
 /**
- * **0.44.1 — the narrow bar keeps its label (KI-842).** The reproduction of
+ * **The narrow bar keeps its label.** The reproduction of
  * JustRAG's measured case (KI-838, `KbWorkspaceLayout ›
  * WorkspaceBarWithScopedSearch`, Chromium, both side columns open at 320px):
  * a **560px** bar holding a back button and a topic title, a search field and
  * a gear — the workspace context's own bar. The shell is fixed at 1200px
  * (= 560 + 2 × 320) and both widths are pinned, so the bar is 560 whatever
  * the Storybook viewport — only the bar's own width enters its flex
- * computation. (Both columns carry a resize handle here; since 0.38.0 a
- * handle has no layout width, see `HandleHasNoLayoutWidth`.)
+ * computation. (Both columns carry a resize handle here; a handle has no
+ * layout width, see `HandleHasNoLayoutWidth`.) The failure this pins is in
+ * the Changelog, 0.44.1.
  *
- * **Until 0.44.0** the search kept its full 28rem (448px) here and the two
- * side regions absorbed the whole shortfall: measured on the claim-base code
- * in this story, the label's region was 16px wide, the title 0px, and the
- * back button and the gear each reached 4px into the field.
- *
- * **Since 0.44.1** the search shrinks first, down to its floor, while each
- * side region keeps its own floor of 11rem. Asserted in Chromium:
+ * The search shrinks first, down to its floor, while each side region keeps
+ * its own floor of 11rem. Asserted in Chromium:
  *
  * 1. the title keeps **at least 120px** (the card's acceptance number, not a
  *    value from the component);
@@ -512,7 +495,7 @@ export const NarrowBarKeepsTheLabel: Story = {
 };
 
 /**
- * **The wide bar is unchanged by 0.44.1**: with room to spare the search is
+ * **The wide bar keeps the search at its maximum**: with room to spare it is
  * still capped at **28rem** and centred on the bar, and the side regions share
  * the rest equally. The shell is fixed at 1280px with the left column at
  * 256px and the sources column out of the desktop arrangement
@@ -550,7 +533,7 @@ export const WideBarKeepsTheSearchAtItsMaximum: Story = {
 };
 
 /**
- * **The order in which the bar gives way (0.44.1)**, measured in one shell
+ * **The order in which the bar gives way**, measured in one shell
  * narrowed step by step — both columns at 320px, the bar at 1024, 900, 800,
  * 560, 480 and 300px:
  *
@@ -618,27 +601,21 @@ export const BarGivesWayInOrder: Story = {
 };
 
 /**
- * **Seit 0.37.0: die Zeile nimmt den Spalten-Gutter.** Bis 0.36.0 steckten
- * beide Leisten in einem `Container` — dem **Seitenmaß** (`px-gutter
- * md:px-margin-page`, zentriert, gedeckelt), also 40px ab `md`. Die Zeile ist
- * aber keine Seiteninhalts-Spalte, sondern Chrome zwischen zwei `SidePanel`s.
- * Gemessen in Chromium (1280px-Fenster, JustRAGs `KbWorkspaceLayout`,
- * 2026-09-21): erster Inhalt der Leiste 40px von der Spaltenkante, Logo der
- * Spalte 24px — genau die Lücke, die der Entwickler gesehen hat.
+ * **The bar takes the column gutter**, not the page measure of a
+ * `Container`: the bar is not a page-content column but chrome between two
+ * `SidePanel`s. (The measurement that led here: Changelog, 0.37.0.)
  *
- * **Seit 0.39.0 ist das Maß der Leiste ihr eigenes** (vorher hieß diese Story
- * `BarInsetMatchesColumns` und verglich es mit der Kopfzeile der Spalte). Die
- * `h-16`-Kopfzeile eines `SidePanel` ist jetzt `px-4` (16px), weil ihr
- * Umschalter auf dem ersten Bedienelement des **Leisten-Rumpfs** steht und
- * nicht auf dieser Zeile. Die beiden Einrückungen sind absichtlich
- * verschieden, also kann die eine nicht mehr das Orakel der anderen sein.
+ * **It is the bar's own measure.** A `SidePanel`'s `h-16` header row is
+ * `px-4` (16px), because its toggle sits on the first control of the
+ * **column body**, not on this bar. The two insets differ on purpose, so
+ * neither can be the other's oracle.
  *
- * **Das Orakel ist der Token, keine Zahl im Code.** Die `play`-Funktion liest
- * `--spacing-gutter` aus dem CSSOM zurück und misst die gerenderte Einrückung
- * (`pageLabel.left − aside.right`) dagegen — ein literales „24" wäre auch dann
- * grün, wenn das Utility zu nichts kompilierte oder der Token umzöge.
- * Zusätzlich wird festgehalten, dass die Kopfzeile der Spalte **nicht**
- * dasselbe Maß hat: 16px, das Maß des Rumpfs.
+ * **The oracle is the token, not a number in the code.** The `play` function
+ * reads `--spacing-gutter` back from the CSSOM and measures the rendered
+ * inset (`pageLabel.left − aside.right`) against it; a literal „24" would
+ * stay green even if the utility compiled to nothing or the token moved. It
+ * also pins that the column's header row does **not** share that measure:
+ * 16px, the body's measure.
  */
 export const BarInsetIsTheColumnGutter: Story = {
   render: () => (
@@ -666,9 +643,9 @@ export const BarInsetIsTheColumnGutter: Story = {
     const columnInset = columnFirst.getBoundingClientRect().left - column.left;
     const barInset = label.left - column.right;
 
-    // Orakel: der deklarierte Token, aus dem CSSOM zurückgelesen — nicht die
-    // Kopfzeile der Spalte (die seit 0.39.0 bewusst ein anderes Maß hat) und
-    // nicht die Zahl 24 im Test.
+    // Oracle: the declared token, read back from the CSSOM — not the column's
+    // header row (which deliberately has a different measure) and not the
+    // number 24 in the test.
     const gutter = getComputedStyle(document.documentElement)
       .getPropertyValue("--spacing-gutter")
       .trim();
@@ -699,10 +676,9 @@ export const BarInsetIsTheColumnGutter: Story = {
 };
 
 /**
- * Beide Zustände der linken Spalte in einer Story, weil der Schalter der
- * einzige Weg zurück ist: klicken zeigt die 60px-**Schiene** (nicht mehr eine
- * 80px-Icon-Spalte — das ist die sichtbarste Änderung von 0.30.0), erneut
- * klicken die volle Spalte.
+ * Both states of the left column in one story, because the toggle is the
+ * only way back: a click shows the 60px **rail**, a second click the full
+ * column.
  */
 export const WithCollapsibleColumns: Story = {
   render: () => (
@@ -733,14 +709,13 @@ export const WithCollapsibleColumns: Story = {
 
     await userEvent.click(await canvas.findByRole("button", { name: "Navigation einklappen" }));
     await expect(column().getBoundingClientRect().width).toBe(SIDE_PANEL_RAIL_WIDTH);
-    /* Eingeklappt ist die Schiene — und seit 0.31.0 WANDERT die Navigation
-       dorthin, statt mit dem Body zu verschwinden: „minimieren" heißt Icons,
-       nicht „keine Navigation". Die Marke bleibt abgeräumt, `header` wandert
-       nicht mit.
+    /* Collapsed is the rail, and the navigation MOVES into it instead of
+       disappearing with the body: "minimise" means icons, not "no
+       navigation". The brand stays cleared; `header` does not move along.
 
-       Genau EIN Landmark, nicht zwei: der Knoten wird verschoben, nicht
-       zusätzlich gerendert — zwei Kopien würden jede `id` und jedes
-       `aria-current` in einer `NavItem` verdoppeln. */
+       Exactly ONE landmark, not two: the node is moved, not rendered a
+       second time. Two copies would duplicate every `id` and every
+       `aria-current` in a `NavItem`. */
     await expect(canvas.getAllByRole("navigation", { name: "Hauptnavigation" })).toHaveLength(1);
     // Die Marke („JLU RAG") ist mit der Kopfzeile aus der Spalte verschwunden
     // — und die breite Zeile trägt keine eigene.
@@ -762,29 +737,23 @@ export const WithCollapsibleColumns: Story = {
 };
 
 /**
- * **Die Schiene ist der senkrechte Spiegel der ausgeklappten Spalte** — jedes
- * Bedienelement behält beim Einklappen seine Höhe auf der Seite.
+ * **The rail is the vertical mirror of the expanded column**: every control
+ * keeps its height on the page across a collapse. The rail mirrors the
+ * `h-16` chrome row and the column body's padding instead of a vertical
+ * rhythm of its own. Measured in Chromium, relative to the column's top, so
+ * neither the scroll position nor the window size enters.
  *
- * Das war bis 0.34.0 nicht so: die Schiene baute ihren eigenen senkrechten
- * Rhythmus (`py-stack-md` + `gap-stack-md`) statt die `h-16`-Chrome-Zeile und
- * die Polsterung des Spaltenkörpers zu spiegeln, also sprangen der Schalter
- * und die ganze Icon-Leiste beim Einklappen nach oben. Gemessen in Chromium,
- * relativ zur Oberkante der Spalte, damit weder Scrollposition noch
- * Fenstergröße eingehen.
- *
- * Das Orakel ist der AUSGEKLAPPTE Zustand, nicht eine im Code abgelesene Zahl:
- * die ausgeklappte Spalte ist die, an der sich die eingeklappte auszurichten
- * hat, und beide Messungen kommen aus demselben Browser-Layout.
+ * The oracle is the EXPANDED state, not a number read from the code: the
+ * expanded column is the one the collapsed one has to line up with, and both
+ * measurements come from the same browser layout.
  *
  * **The expanded nav is the overview context's `SidebarPanel` frame** — the
  * composition JLURAG's `SidebarNav.tsx` renders: a `SidebarPanel` with no
  * title, `head` or `nav` around the rows, bare rows in the rail. The story
  * asserts that frame before it measures, so it cannot silently fall back to
- * bare rows. Until KI-852 this composition jumped: the panel rendered an
- * empty 28px head (`pt-4 pb-3`) and the first row sat 92px below the
- * column's top expanded, 80px in the rail. Now a head-less panel renders no
- * head and its list carries the 16px top inset (`pt-4`) the rail's
- * `py-stack-md` mirrors.
+ * bare rows. A head-less panel renders no head, and its list carries the
+ * 16px top inset (`pt-4`) the rail's `py-stack-md` mirrors. (The failures
+ * this pins: Changelog, 0.35.0 and KI-852.)
  */
 export const CollapsedRailKeepsVerticalPositions: Story = {
   render: () => (
@@ -827,11 +796,10 @@ export const CollapsedRailKeepsVerticalPositions: Story = {
     await expect(
       offsetTop(await canvas.findByRole("button", { name: "Meine Sammlungen" })),
     ).toBe(openNavTop);
-    /* Und der Fuß: derselbe Knoten, derselbe Abstand zur Unterkante. Die
-       Schiene brachte hier bis 0.34.0 ein eigenes `pb-stack-md` mit, zusätzlich
-       zur Polsterung im Knoten des Konsumenten — der Nutzermenü-Knopf saß
-       eingeklappt 16px höher. Die Höhe des Knopfs ändert sich (`sm` → `icon`),
-       die Unterkante darf es nicht. */
+    /* And the foot: the same node, the same distance to the bottom edge. The
+       rail adds no bottom padding of its own on top of the consumer node's.
+       The button's height changes (`sm` → `icon`); its bottom edge must
+       not. */
     await expect(offsetBottom(await canvas.findByRole("button", { name: /Jamie Lee/ }))).toBe(
       openFootBottom,
     );
@@ -839,29 +807,26 @@ export const CollapsedRailKeepsVerticalPositions: Story = {
 };
 
 /**
- * **Seit 0.36.0: beide Spalten sind ziehbar** — hier im Workspace-Kontext,
- * dem, in dem beide Spalten es sind. Die Shell komponiert dafür `SidePanel` +
- * `ResizeHandle`; es gibt keinen zweiten Mechanismus und keine Speicherung im
- * Paket. Die
- * Breiten sind **Zustand der App**: `onWidthChange` liefert jeden geklemmten
- * Wert, die App reicht ihn über `leftWidth` bzw. `rightPanel.width` zurück.
+ * **Both columns are draggable**, shown in the workspace context, where both
+ * are. The shell composes `SidePanel` + `ResizeHandle` for it; there is no
+ * second mechanism and no storage in the package. The widths are **the
+ * app's state**: `onWidthChange` reports every clamped value, and the app
+ * passes it back through `leftWidth` or `rightPanel.width`.
  *
- * Die `play`-Funktion misst in Chromium, was jsdom nicht kann: sie fokussiert
- * den linken Trenner, drückt dreimal `→` und prüft, dass die **gemessene**
- * Box der Spalte um 3 × `step` (30px) gewachsen ist und exakt dem
- * `aria-valuenow` des Trenners entspricht. Für die rechte Spalte dasselbe mit
- * `←` — die Pfeiltasten sind pro Seite gespiegelt, weil die Taste den
- * *Trenner* bewegt und `aria-valuenow` die *Spalte* meldet.
+ * The `play` function measures in Chromium what jsdom cannot: it focuses the
+ * left separator, presses `→` three times and checks that the column's
+ * **measured** box grew by 3 × `step` (30px) and equals the separator's
+ * `aria-valuenow` exactly. The same for the right column with `←`: the
+ * arrow keys are mirrored per side, because the key moves the *separator*
+ * and `aria-valuenow` reports the *column*.
  *
- * Orakel: das Layout des Browsers gegen den Zustand der Story — keine im
- * Komponentencode abgelesene Zahl. Startbreiten werden gemessen, nicht
- * behauptet.
+ * Oracle: the browser's layout against the story's state, not a number read
+ * from the component code. Start widths are measured, not asserted.
  *
- * **Die Breiten hält `usePersistedWidth`** (0.36.0) — der Haken, der die
- * gezogene Breite pro Gerät überlebt, mit dem **ganzen** Schlüssel vom
- * Konsumenten. Die Fixture reicht pro Montierung ein `Storage` im
- * Arbeitsspeicher herein, damit der Testlauf nichts in der echten
- * `localStorage` hinterlässt; eine App lässt `storage` weg.
+ * **`usePersistedWidth` holds the widths**: the hook that keeps a dragged
+ * width per device, with the **whole** key from the consumer. The fixture
+ * passes an in-memory `Storage` per mount, so the test run leaves nothing in
+ * the real `localStorage`; an app omits `storage`.
  */
 export const WithResizableColumns: Story = {
   render: () => (
@@ -909,31 +874,28 @@ export const WithResizableColumns: Story = {
 };
 
 /**
- * **0.38.0 — der Trenner belegt keine Layout-Breite mehr.** Bis 0.37.0 war das
- * `ResizeHandle` ein 6px breites, transparentes Flex-Element in der Reihe;
- * durchgeschienen ist dabei der `bg-surface`-Hintergrund der Shell, also ein
- * getönter Streifen zwischen zwei `bg-surface-container-lowest`-Flächen
- * („da ist ein ganzer div zwischen Header und Sidebar", JustRAG-KB, 09/2026).
- * Jetzt ist der Wirt `w-0` und die Greiffläche ein `::after`-Overlay, das mit
- * 8px **über** der Randlinie liegt (je 4px in beide Nachbarn).
+ * **The separator takes no layout width.** Its host is `w-0`, and the grab
+ * zone is an `::after` overlay 8px wide that sits **over** the edge line
+ * (4px into each neighbour), so no tinted strip shows between two
+ * `bg-surface-container-lowest` surfaces. (The report that led here:
+ * Changelog, 0.38.0.)
  *
- * Diese `play`-Funktion prüft in Chromium genau das, was jsdom nicht kann —
- * **Orakel ist das Layout und das Hit-Testing des Browsers**, jede erwartete
- * Zahl ist die gemessene Kante des *Nachbarn*, nie ein Literal:
+ * This `play` function checks in Chromium exactly what jsdom cannot.
+ * **The oracle is the browser's layout and hit-testing**: every expected
+ * number is the measured edge of a *neighbour*, never a literal:
  *
- * 1. die Box des Trenners ist 0px breit,
- * 2. die rechte Kante der linken Spalte **ist** die linke Kante der
- *    Hauptspalte — zwischen beiden liegt nichts mehr,
- * 3. `elementFromPoint` liefert auf dieser Linie ±3px (also von beiden Seiten
- *    her) den Trenner, ±5px dagegen nicht mehr: die 8px-Greiffläche ist real
- *    und sie ist zentriert,
- * 4. ein Zeiger-Zug, der an einem so *gefundenen* Punkt beginnt, verändert
- *    Breite und `aria-valuenow` weiterhin um denselben Betrag.
+ * 1. the separator's box is 0px wide,
+ * 2. the left column's right edge **is** the main column's left edge, with
+ *    nothing between them,
+ * 3. `elementFromPoint` returns the separator ±3px from that line (so from
+ *    both sides) but not ±5px: the 8px grab zone is real and centred,
+ * 4. a pointer drag that starts at a point *found* that way still changes
+ *    the width and `aria-valuenow` by the same amount.
  *
- * Der Zug-Zustand färbt das Overlay (`after:bg-primary`); der Ruhezustand ist
- * durchsichtig. Der **Hover**-Ton (`hover:after:bg-outline-variant`) wird hier
- * *nicht* geprüft: CSS-`:hover` hängt am echten Zeiger des Browsers und wird
- * von per JavaScript verschickten Pointer-Events nicht ausgelöst.
+ * The dragging state colours the overlay (`after:bg-primary`); at rest it is
+ * transparent. The **hover** tone (`hover:after:bg-outline-variant`) is *not*
+ * checked here: CSS `:hover` follows the browser's real pointer and is not
+ * triggered by pointer events dispatched from JavaScript.
  */
 export const HandleHasNoLayoutWidth: Story = {
   render: () => (

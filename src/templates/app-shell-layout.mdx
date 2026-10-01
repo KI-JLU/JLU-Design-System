@@ -49,10 +49,8 @@ component with a different fill; the shared story fixture that renders them is
 
 - **Colour scheme, contrast, accent and Style are not in the bar.** They live
   behind the user menu: „Einstellungen" opens a `SettingsDialog` whose
-  „Darstellung" section is `AppearanceSettings` (KI-850). The `Overview`
-  story walks that route in its `play` function. The in-bar `ThemeToggle`
-  was removed in KI-846; theme, contrast, accent and Style are switched only
-  in that settings section.
+  „Darstellung" section is `AppearanceSettings`, the only place they are
+  switched. The `Overview` story walks that route in its `play` function.
 - **Page content is a content template**, hung in as `children` — the shell
   brings the chrome and the one `<main>`, the template brings the page's
   heading:
@@ -69,18 +67,18 @@ component with a different fill; the shared story fixture that renders them is
 | `nav` | `ReactNode` | ✅ | Navigation content — `<NavItem>` rows (with `asChild` for router links), a `SidebarPanel` around them, or a whole panel like the workspace's history. Lands in a `<nav aria-label={navLabel}>`; a `SidebarPanel` child brings its own insets. |
 | `sidebarFooter` | `ReactNode` | — | Pinned foot of the left column: the user menu. |
 | `navLabel` | `string` | — | Accessible name of the `<nav>` landmark **and** of the column around it (default „Hauptnavigation"). |
-| `pageLabel` | `ReactNode` | — | Current location — headline-sized and bold, but a `<p>` and **not** a heading, on the left of the bar. **Optional since 0.29.0**: omitted, the template renders **no element** for it. `truncate` since 0.30.0. |
-| `search` | `ReactNode` | — | The bar's **centre** (0.30.0) and **the standard fill of every view**: a search field, capped at 28rem and centred on the *bar*, with or without a label. On a short bar it gives way first, down to 8rem (0.44.1). Not rendered below `lg`. |
-| `headerActions` | `ReactNode` | — | Chrome controls at the **right** end of the bar — an icon button, a menu, several, or nothing. The template renders no control of its own there (since 0.26.0). Below `lg` this region sits next to the logo in the narrow bar. |
-| `leftOpen` | `boolean` | ✅ | Left column expanded (`true`) or the rail (`false`). **Replaces `collapsed` and means the opposite.** |
+| `pageLabel` | `ReactNode` | — | Current location — headline-sized and bold, but a `<p>` and **not** a heading, on the left of the bar. Optional: omitted, the template renders **no element** for it. Truncates when the bar is short. |
+| `search` | `ReactNode` | — | The bar's **centre** and **the standard fill of every view**: a search field, capped at 28rem and centred on the *bar*, with or without a label. On a short bar it gives way first, down to 8rem. Not rendered below `lg`. |
+| `headerActions` | `ReactNode` | — | Chrome controls at the **right** end of the bar — an icon button, a menu, several, or nothing. The template renders no control of its own there. Below `lg` this region sits next to the logo in the narrow bar. |
+| `leftOpen` | `boolean` | ✅ | Left column expanded (`true`) or the rail (`false`). |
 | `onLeftOpenChange` | `(isOpen: boolean) => void` | ✅ | The toggle was pressed; receives the **requested** state. |
 | `collapseLabel` | `string` | — | Name of the toggle while expanded (default „Navigation einklappen"). |
 | `expandLabel` | `string` | — | Name of the toggle while collapsed (default „Navigation ausklappen"). |
-| `leftWidth` | `number` | — | **0.36.0**: expanded width of the left column in px. Omitted, `AppShell`'s 256 default applies. |
-| `leftResize` | `AppShellPanel["resize"]` | — | **0.36.0**: makes the left column draggable (`minWidth`, `maxWidth`, `onWidthChange`, `label` — all or nothing). Omitted, no separator. |
-| `rightPanel` | `AppShellPanel` | — | **0.30.0**: second column on the right, passed whole (the shape `AppShell.left`/`.right` take). Omitted, no landmark and no rail. Carries `resize` since 0.36.0. |
-| `showRight` | `boolean` | — | **0.37.0**: `false` takes `rightPanel` out of the **desktop** arrangement **without** touching its `isOpen`, and is ignored below `lg`. Forwarded to `AppShell`. Hide a column per view with this instead of dropping `rightPanel` (that destroys its collapse state). |
-| `mobileTabs` | `MobilePaneTab[]` | ✅ | **0.30.0**: tabs of the narrow arrangement, each with `pane: "left" \| "main" \| "right"`. |
+| `leftWidth` | `number` | — | Expanded width of the left column in px. Omitted, `AppShell`'s 256 default applies. |
+| `leftResize` | `AppShellPanel["resize"]` | — | Makes the left column draggable (`minWidth`, `maxWidth`, `onWidthChange`, `label` — all or nothing). Omitted, no separator. |
+| `rightPanel` | `AppShellPanel` | — | Second column on the right, passed whole (the shape `AppShell.left`/`.right` take), `resize` included. Omitted, no landmark and no rail. |
+| `showRight` | `boolean` | — | `false` takes `rightPanel` out of the **desktop** arrangement **without** touching its `isOpen`, and is ignored below `lg`. Forwarded to `AppShell`. Hide a column per view with this instead of dropping `rightPanel` (that destroys its collapse state). |
+| `mobileTabs` | `MobilePaneTab[]` | ✅ | Tabs of the narrow arrangement, each with `pane: "left" \| "main" \| "right"`. |
 | `activeMobileTab` | `string` | ✅ | Id of the current tab — the **only** input that decides which area shows below `lg`. |
 | `onMobileTabChange` | `(id: string) => void` | ✅ | A tab was tapped. |
 | `mobileTabBarLabel` | `string` | ✅ | Accessible name of the tab bar's `navigation` landmark. |
@@ -94,20 +92,15 @@ component with a different fill; the shared story fixture that renders them is
 
 - **`pageLabel` on the left, `search` in the centre, `headerActions` on the
   right.** The two side regions are identical flex children (`flex-1`, basis
-  0, since 0.44.1 with the same floor) — exactly that centres the search on
-  the **bar**, not on the space the label leaves.
-- **Measured for 0.30.0 in Chromium** (1280px window, the story's `play`
-  function) — the numbers document that release: bar 256–1200 → centre 728,
-  field 504–952 → centre 728, although the label (125.4px) and the
-  right-hand control (then a 102px `ThemeToggle`) differed by 23px. Since
-  0.37.0 the label starts at 280 instead of 296 (see „The bar's inset"); the
-  centre is untouched. Since KI-847 the right-hand control in the story is a
-  36px icon button; the `play` function still requires the two sides to
-  differ.
-- **0.29.0's `mx-auto` recipe is obsolete.** It centred `headerActions`'
-  content in the space *after* the label — with a label the field stood off
-  centre and moved whenever the page name changed. A search field goes in
-  `search`.
+  0, the same floor) — exactly that centres the search on the **bar**, not on
+  the space the label leaves.
+- **Measured in Chromium**: the story's `play` function requires the field's
+  centre to be the bar's centre while the label and the right-hand control (a
+  36px icon button) differ in width. The release measurement is in the
+  Changelog, 0.30.0.
+- **A search field goes in `search`, not in `headerActions`.** Centred
+  inside `headerActions` with `mx-auto`, it would centre in the space
+  *after* the label, and move whenever the page name changes.
 - **Without a label the centre is the same** — the overview context has no
   `pageLabel` (its content template renders the page's title), and its field
   sits on the bar's centre; `Overview` asserts it.
@@ -123,18 +116,11 @@ component with a different fill; the shared story fixture that renders them is
   explicitly (`search={null}`): it pins what an app gets when it omits every
   slot.
 
-### Short bar: the search gives way first (since 0.44.1)
+### Short bar: the search gives way first
 
 <Canvas of={AppShellLayoutStories.NarrowBarKeepsTheLabel} />
 
-- **Until 0.44.0 the side regions gave way first.** The centre was `w-full
-  max-w-md min-w-0` and the sides had no floor, so the search kept its full
-  28rem and the label and the actions absorbed the whole shortfall. Measured
-  in Chromium (JustRAG KI-838, both columns open at 320px, a 560px bar): the
-  label's region was **16px**, a back button plus a topic title got **0px** of
-  title, and the back button and the gear each reached 4px into the 448px
-  field.
-- **Since 0.44.1 the order is: spare room, then the search, then the sides.**
+- **The order is: spare room, then the search, then the sides.**
   The centre is a 28rem flex basis that shrinks down to an **8rem** floor;
   each side region keeps an **11rem** floor (a 36px icon button plus a ~120px
   truncated title) until the search has reached its own. Only then do the
@@ -162,18 +148,14 @@ component with a different fill; the shared story fixture that renders them is
   560 the field loses all 240px and the title none, 560 → 480 the field holds
   its floor and the title loses 40px (half of 80).
 
-### The bar's inset (since 0.37.0)
+### The bar's inset
 
 <Canvas of={AppShellLayoutStories.BarInsetIsTheColumnGutter} />
 
-- **The bar takes the column gutter: `px-gutter`, 24px.** Until 0.36.0 both
-  bars sat in a `Container`, i.e. in the **page measure** (`px-gutter`, from
-  `md` `px-margin-page`, centred and capped). The bar is not page content but
-  **chrome between two `SidePanel`s**, so it takes the plain column measure.
-- **Measured in Chromium** (1280px window, JustRAG's `KbWorkspaceLayout`,
-  21.09.2026): the bar's first content 40px from the column edge, the
-  column's logo 24px — the visible gap between header and bars.
-- **Since 0.39.0 it is the bar's own measure, not a mirror of the column.** A
+- **The bar takes the column gutter: `px-gutter`, 24px**, not the page
+  measure of a `Container`. The bar is not page content but **chrome between
+  two `SidePanel`s**, so it takes the plain column measure.
+- **It is the bar's own measure, not a mirror of the column.** A
   `SidePanel`'s `h-16` header row is `px-4` (16px), because its toggle sits on
   the first control of the column body. The two insets are different on
   purpose.
@@ -191,12 +173,9 @@ app's decision:
 - **Several** come as a fragment and stand in a row (`gap-2`).
 - **Empty** means no box in the DOM — the overview context's case.
 
-**Since 0.26.0 the shell needs no `ThemeProvider`.** Until then the template
-rendered a `ThemeToggle` itself and so required the provider — without it,
-`useTheme must be used within a ThemeProvider` was thrown at runtime from a
-template whose props say nothing about theming. The appearance controls now
-belong to the settings window behind the user menu (see „Two contexts, one
-shell").
+**The shell needs no `ThemeProvider`**: neither `AppShellLayout` nor
+`AppShell` reads the theme. The appearance controls belong to the settings
+window behind the user menu (see „Two contexts, one shell").
 
 ## The left column
 
@@ -231,7 +210,7 @@ const [leftOpen, setLeftOpen] = useState(true);   // or URL, context, localStora
 - **The state belongs to the app.** There is deliberately no `defaultOpen`: a
   column width is exactly the kind of value an app stores per user.
 - **Collapsed is the rail** (60px, `SIDE_PANEL_RAIL_WIDTH`). The same `nav`
-  node moves into it (0.31.0) — `NavItem`s shrink to their icon form, and a
+  node moves into it — `NavItem`s shrink to their icon form, and a
   `nav` that renders differently in the rail reads `useSidebarCollapsed()`
   (the overview's rows drop their `SidebarPanel`, the workspace's history
   becomes a `SidebarRail`).
@@ -244,22 +223,20 @@ const [leftOpen, setLeftOpen] = useState(true);   // or URL, context, localStora
   `SidebarPanel` with no title, `head` or `nav` when expanded, bare in the
   rail. Such a panel renders no head, and its list carries the same 16px top
   inset as `AppShellLayout`'s own `p-4` nav wrapper and the rail — so bare
-  rows and a head-less panel both start 16px below the chrome row. Until
-  KI-852 the panel rendered an empty 28px head, and the first row jumped 12px
-  on collapse (92px below the column's top expanded, 80px in the rail).
+  rows and a head-less panel both start 16px below the chrome row.
 - **Both label props are translatable** — the defaults are German.
 
-## Second column on the right (since 0.30.0)
+## Second column on the right
 
 `rightPanel` takes a whole `AppShellPanel` instead of six flat props: it is
 exactly the shape `AppShell` itself takes, so there is no second vocabulary
 for the same thing. `content`, `header`, `footer`, `label`, `isOpen`,
 `onOpenChange`, `width` (default 256), `expandLabel`, `collapseLabel`,
-`collapsedPreview` — and since 0.36.0 `resize`. The workspace context above
+`collapsedPreview` and `resize`. The workspace context above
 (`ChatWorkspace`) is the case: sources on the right, with a `collapsedPreview`
 rail of one icon per source.
 
-## Resizable columns (since 0.36.0)
+## Resizable columns
 
 <Canvas of={AppShellLayoutStories.WithResizableColumns} />
 
@@ -298,9 +275,7 @@ const [rightWidth, setRightWidth] = usePersistedWidth("myapp.kb.rightWidth", {
 </AppShellLayout>
 ```
 
-- **It is the library's one `ResizeHandle`** — no second mechanism. Until 0.35.0 the shell had the columns but no handles: an app on
-  `AppShellLayout` could not widen its navigation column at all (JustRAG's
-  knowledge-base view, KI-94).
+- **It is the library's one `ResizeHandle`** — no second mechanism.
 - **`resize` is an object, all or nothing.** As four loose optionals „handle
   without bounds" would be expressible — a `separator` without
   `aria-valuemin`/`-valuemax` is no APG splitter any more. `width` stays
@@ -312,9 +287,9 @@ const [rightWidth, setRightWidth] = usePersistedWidth("myapp.kb.rightWidth", {
 - **No handle on a collapsed column** (the rail is a fixed 60px; a separator
   there would report a value with no visible effect) and **none below `lg`**
   (one area fills the screen — there is nothing to drag the column against).
-- **Omitted, nothing changes**: no separator, no `id` on the `<aside>`,
-  default 256. An unchanged call site renders the same DOM as before 0.36.0.
-- **Since 0.38.0 the handle takes no layout width** — the column's edge *is*
+- **Omitted, there is no handle**: no separator, no `id` on the `<aside>`,
+  default 256.
+- **The handle takes no layout width** — the column's edge *is*
   `<main>`'s edge, and the 8px grab zone straddles it
   (`HandleHasNoLayoutWidth` measures it with the browser's hit-testing).
 
@@ -371,47 +346,17 @@ import { usePersistedWidth } from "@ki4jlu/design-system";
   the area shown below `lg`, there is **no** `main` at all: the main column is
   not in the tree then, and wrapping a `complementary` in a `main` would be
   the worse lie.
-- **Every node is mounted exactly once.** The old drawer rendered the same
-  nav node a second time — an `id` in it existed twice while it was open
-  (KI-797, documented in JustRAG's `AppChrome.tsx`). That went with the
-  drawer.
+- **Every node is mounted exactly once**, in every arrangement. There is no
+  drawer that would render the nav a second time and duplicate every `id` in
+  it.
 
-## Migration 0.29 → 0.30 (**breaking**)
+## Upgrading
 
-```tsx
-// before
-<AppShellLayout
-  logo={logo} nav={nav} sidebarFooter={userMenu}
-  menuLabel={t("openNavigation")}     // REMOVED — no burger button
-  drawerLabel={t("navigation")}       // REMOVED — no drawer
-  headerActions={searchField}
-  collapsed={collapsed}               // REMOVED
-  onCollapsedChange={setCollapsed}    // REMOVED
->
-
-// after
-<AppShellLayout
-  logo={logo} nav={nav} sidebarFooter={userMenu}
-  search={searchField}                // NEW: the bar's centre
-  headerActions={actions}             // optional: the app's own chrome controls
-  leftOpen={leftOpen}                 // INVERTED: leftOpen === !collapsed
-  onLeftOpenChange={setLeftOpen}
-  mobileTabs={TABS}                   // NEW, required
-  activeMobileTab={tab}               // NEW, required
-  onMobileTabChange={setTab}          // NEW, required
-  mobileTabBarLabel={t("switchArea")} // NEW, required
-  rightPanel={sources}                // NEW, optional
->
-```
-
-- `collapsed` → `leftOpen`, **with the opposite meaning**. A mechanical
-  rename silently turns the UI inside out.
-- Both are **required** now, as are the four tab props: below `lg` the shell
-  shows one area, and without tabs the nav column would not be reachable.
-- `menuLabel`/`drawerLabel`: delete. There is no replacement; the areas are
-  named through `mobileTabs` and `mobileTabBarLabel`.
-- Visible: the collapsed column is 60px instead of 80px and shows no icons
-  without `collapsedPreview`. The expanded width is unchanged.
+This page describes the current release. Migration guides live in the
+Changelog in `docs/DESIGN_SYSTEM.md` §7: entry **0.30.0 → „Migration"** for
+`collapsed` → `leftOpen` (**with the opposite meaning**) and the four
+required tab props, and entry **KI-846 → „Migration"** for the removed theme
+and Style switches and `WorkspaceLayout`.
 
 ## Do's & Don'ts
 
@@ -426,11 +371,8 @@ import { usePersistedWidth } from "@ki4jlu/design-system";
 - ✅ Hang page content in as a **content** template (`SectionedGridLayout`,
   `DashboardLayout`, `FormLayout`, `TableLayout`, `ChatLayout`) or a
   `ChatStage`.
-- ❌ **Not** every template fits: `AuthLayout` stands outside the shell (sign-in
-  pages carry no app chrome), and a frame that brings its own chrome must not
-  be nested here, or the screen shows two chrome column sets and two
-  `<main>`s. A workspace screen is this template with a `rightPanel`, not a
-  nested frame. The inventory in DESIGN_SYSTEM.md §4 decides.
+- ❌ **Nothing that brings its own chrome goes inside**, and `AuthLayout`
+  stays outside the shell: `docs/DESIGN_SYSTEM.md` §4 → „Page templates".
 - ✅ `headerActions` and `search` take **chrome**: search, small tools, a
   menu. No page content, no forms, no business logic.
 - ❌ **No heading in `headerActions` or `search`.** Both are chrome positions
