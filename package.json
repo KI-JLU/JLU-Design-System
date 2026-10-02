@@ -6,7 +6,7 @@
   "license": "UNLICENSED",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/KI4JLU/JLU-Design-System.git"
+    "url": "git+https://github.com/KI4JLU/Design-System.git"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
