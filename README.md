@@ -27,7 +27,7 @@ Das Repo ist öffentlich, dieser Weg braucht **keine Registry und keinen Token**
 weder lokal noch in CI noch im Docker-Build:
 
 ```bash
-npm install github:KI4JLU/JLU-Design-System#v0.21.0
+npm install github:KI4JLU/Design-System#v0.21.0
 ```
 
 Immer auf einen **Tag** pinnen, nicht auf `main`. Beim Installieren baut das

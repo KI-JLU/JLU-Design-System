@@ -644,7 +644,8 @@ Until then the git path carries us; keep the README's git section first.
   *Known consumers, audited 2026-09-30 (read-only, at that moment).*
   **CampusAgents** (`src/`, pinned `^0.22.0`): no import of any removed
   export. **JustRAG** (`web/src`, branch `ds/adoption`, pinned
-  `github:KI4JLU/JLU-Design-System#v0.44.1`): no production import, but one
+  `github:KI4JLU/JLU-Design-System#v0.44.1` *(later note: the repo is now
+  `KI4JLU/Design-System`)*): no production import, but one
   **test** imports `ThemeToggle`: `web/src/contexts/ThemeContext.test.tsx:37`,
   which renders the real toggle to drive the app's provider. It breaks when
   JustRAG raises its pin past this release and has to move onto
